@@ -1,8 +1,8 @@
-npm:
-	npm install --no-optional
+pnpm:
+	pnpm install --no-optional
 
-test: npm
-	npm run test
+test: pnpm
+	pnpm test
 
 html:
 	git rev-parse --verify --short HEAD > version.txt
@@ -14,4 +14,4 @@ html:
 all: test html
 
 .DEFAULT_GOAL := all
-.PHONY: all test npm
+.PHONY: all test pnpm
