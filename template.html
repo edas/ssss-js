@@ -105,7 +105,7 @@
         <tr>
           <td>
             Enter the keys here, one per line:<br/>
-            <pre><textarea id="keys" rows="10" cols="70"></textarea></pre>
+            <pre><textarea id="keysToCombine" rows="10" cols="70"></textarea></pre>
           </td>
         </tr>
         <tr>
@@ -124,6 +124,41 @@
           </td>
         </tr>
         <tr><td colspan="3"><div id="combineLog"></div></td></tr>
+      </table>
+    </form>
+
+    <h1>Extend</h1>
+
+    Use this form to generate more shares with the same threshold. <i>You must
+    provide precisely number of keys that the secret owner specified as the
+    <b>Threshold</b> value when the shared keys were created.</i> If more (or
+    less) keys are provided, the secret recovery will fail (possibly by yielding
+    the wrong secret). You must also check the <b>Hex output</b> if the keys
+    were generated with <b>Hex input</b> checked.
+
+    <p>
+    <form>
+      <table align="center">
+        <tr>
+          <td>
+            Enter the keys here, one per line:<br/>
+            <pre><textarea id="keysToExtend" rows="10" cols="70"></textarea></pre>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <input type="button" onclick="extendKeys()" value="Extend Keys">
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Extended Keys<br/>
+            <pre><textarea id="extendedShares" rows="10" cols="70"></textarea></pre>
+          </td>
+        </tr>
+
+        <tr><td colspan="3"><div id="extendLog"></div></td></tr>
       </table>
     </form>
 
@@ -185,15 +220,18 @@
 
       try {
         var elem = document.getElementById("generatedKeys");
-        var elem2 = document.getElementById("keys");
+        var elem2 = document.getElementById("keysToCombine");
+        var elem3 = document.getElementById("keysToExtend");
         elem.value = "";
         elem2.value = "";
+        elem3.value = "";
 
         var s = new ssss.SSSS(parseInt(threshold), parseInt(numShares), hexInput);
         var keys = s.split(secret, token);
 
         elem.value = keys.join("\n");
         elem2.value = keys.slice(0, threshold).join("\n");
+        elem3.value = elem2.value;
       } catch (e) {
         console.error(e);
       } finally {
@@ -208,13 +246,39 @@
       try {
         var hexOutput  = document.getElementById("hexOutput").checked;
         document.getElementById("combined").value = "";
-        var keyTxt = document.getElementById("keys").value;
+        var keyTxt = document.getElementById("keysToCombine").value;
         var keys = keyTxt.split("\n").filter(function(key) {
           return key.length > 2;
         });
         var s = new ssss.SSSS(keys.length, 0, hexOutput);
         var secret = s.combine(keys);
         document.getElementById("combined").value = secret;
+      } catch (e) {
+        console.error(e);
+      } finally {
+        logRestore();
+      }
+    }
+
+    function extendKeys() {
+      clearLogs('#extendLog');
+      logTo(document.querySelector('#extendLog'));
+
+      try {
+        const token = document.getElementById("token").value.trim();
+        const newSharesElem = document.getElementById("extendedShares");
+        const shares = document.getElementById("keysToExtend").value.split("\n").filter(function(share) {
+          return share.length > 2;
+        });
+
+        const newShares = newSharesElem.value ? newSharesElem.value.split("\n") : [];
+
+        const s = new ssss.SSSS(shares.length, 0, false);
+        const newShare = s.extend([...shares, ...newShares], shares.length, token);
+
+        newShares.push(newShare);
+
+        newSharesElem.value = newShares.join("\n");
       } catch (e) {
         console.error(e);
       } finally {

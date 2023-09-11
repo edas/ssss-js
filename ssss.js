@@ -293,7 +293,7 @@
      * @param {BigNumber[][]} A 2D array
      * @param {BigNumber[]} b 1D array
      */
-    P.restore_secret = function (n, AA, b) {
+    P.restore_secret = function (n, AA, b, coeff) {
       var i, j, k, found
       var h = new BN(0)
       var t = this
@@ -330,6 +330,21 @@
       }
       h = t.field_invert(AA[n - 1][n - 1])
       b[n - 1] = t.field_mult(b[n - 1], h)
+
+      // Transform AA to identity matrix and calculate other coefficients to recover other shares
+      coeff.push(b[n - 1]);
+
+      for (i = n - 2; i >= 0; i--) {
+        for (j = n - 1; j > i; j--) {
+          h = t.field_mult(b[j], AA[j][i]);
+          b[i] = fieldAdd(b[i], h);
+        }
+        h = t.field_invert(AA[i][i]);
+        b[i] = t.field_mult(b[i], h);
+
+        coeff.push(b[i]);
+      }
+
       return 0
     }
 
@@ -421,6 +436,14 @@
     /* Calculate the secret */
 
     P.combine = function (shares) {
+      var [secret] = this._combine(shares);
+
+      this.field_deinit();
+
+      return secret;
+    }
+
+    P._combine = function (shares) {
       var a, b
       var i, j
       var s = 0
@@ -467,7 +490,8 @@
         y[i] = fieldAdd(y[i], x)
       }
 
-      if (this.restore_secret(this.opt_threshold, A, y)) {
+      const coeff = [];
+      if (this.restore_secret(this.opt_threshold, A, y, coeff)) {
         fatal('Shares inconsistent. Perhaps a single share was used twice.')
       }
 
@@ -479,9 +503,68 @@
         }
       }
 
-      var secret = fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree)
-      this.field_deinit()
-      return secret
+      return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff];
+    }
+
+    P.extend = function (shares, opt_threshold, token) {
+      if (token.length > MAXTOKENLEN) {
+        fatal('Token too long');
+      }
+
+      var [, coeff] = this._combine(shares);
+
+      // Find the first available index
+      let nextIndex = shares.length + 1;
+
+      const indexes = [];
+      for (const share of shares) {
+        let currentIndex;
+        const parts = share.split('-');
+        if (token) {
+          if (token !== parts[0]) {
+            fatal('invalid share');
+          }
+
+          currentIndex = parseInt(parts[1])
+        } else {
+          currentIndex = parseInt(parts[0])
+        }
+
+        if (isNaN(currentIndex)) {
+          fatal('invalid share')
+        }
+
+        indexes.push(currentIndex);
+      }
+
+      const sortedIndexes = indexes.sort((a, b) => a - b);
+      for (const [i, currentIndex] of sortedIndexes.entries()) {
+        if (currentIndex !== i + 1) {
+          nextIndex = i + 1;
+
+          break;
+        }
+      }
+
+      const x = new BN(nextIndex);
+      const y = this.horner(opt_threshold, x, coeff)
+
+      let share = '';
+      if (token) {
+        share = token + '-';
+      }
+
+      let fmtLen = 1;
+      let i = Math.max(shares.length + 1, nextIndex);
+      for (; i >= 10; i /= 10, fmtLen++);
+
+      share += pad(nextIndex, fmtLen, '0')
+      share += '-'
+      share += fieldPrint(y, 1, this.degree)
+
+      this.field_deinit();
+
+      return share;
     }
 
     return SSSS
