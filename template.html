@@ -222,9 +222,11 @@
         var elem = document.getElementById("generatedKeys");
         var elem2 = document.getElementById("keysToCombine");
         var elem3 = document.getElementById("keysToExtend");
+        var elem4 = document.getElementById("extendedShares");
         elem.value = "";
         elem2.value = "";
         elem3.value = "";
+        elem4.value = "";
 
         var s = new ssss.SSSS(parseInt(threshold), parseInt(numShares), hexInput);
         var keys = s.split(secret, token);
