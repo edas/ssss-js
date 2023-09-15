@@ -1,14 +1,18 @@
-[![npm package](https://nodei.co/npm/ssss-js.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/ssss-js/)
+# Fork Notes
 
-[![Build Status](https://travis-ci.org/gburca/ssss-js.svg?branch=master)](https://travis-ci.org/gburca/ssss-js)
+Please note that this tool was originally forked from <https://github.com/gburca/ssss-js> and has been extended to include the following features:
 
+1. Extension/generation of additional shares from an existing threshold of shares.
+2. Support for raw entropy export/import.
+
+# ssss-js
 
 This project is a JavaScript version of [Shamir's Secret Sharing
 Scheme](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing). It has 2
 distinguishing features:
 
 1. It is interoperable and compatible with B. Poettering's Linux `ssss` utility
-   (`ssss-split` and `ssss-combine`) from http://point-at-infinity.org/ssss/ so
+   (`ssss-split` and `ssss-combine`) from <http://point-at-infinity.org/ssss/> so
    keys/shares can be created with one and recovered with the other. That
    project was used as the reference implementation for this project.
 2. It consists of a single `html` file which includes everything needed to
@@ -33,24 +37,30 @@ the future.
 
 Usage
 =====
-- Try it out at https://ebixio.com/ssss.html
+
+- Try it out at <https://ebixio.com/ssss.html>
 - For offline use:
-  - Download `ssss.html` from https://ebixio.com/ssss.html or https://github.com/gburca/ssss-js/releases
+  - Download `ssss.html` from <https://ebixio.com/ssss.html> or <https://github.com/gburca/ssss-js/releases>
   - Open up the downloaded page with a browser and follow the simple instructions.
 
 Build
 =====
+
 - A simple `Makefile` is provided to assist with generating the stand-alone
   `html` page.
-- `npm` package is at: https://www.npmjs.com/package/ssss-js
+- `npm` package is at: <https://www.npmjs.com/package/ssss-js>
 
 Test
 ====
+
 - Since all the tests are in `test/*`:
+
 ```
     ./node_modules/qunitjs/bin/qunit
 ```
+
 OR (during development) if you have `entr`:
+
 ```
     ls *.js test/*.js | entr -c ./node_modules/qunitjs/bin/qunit
 ```
