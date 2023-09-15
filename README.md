@@ -1,11 +1,14 @@
-# Fork Notes
+
+# ssss-js
+
+## Fork Notes
 
 Please note that this tool was originally forked from <https://github.com/gburca/ssss-js> and has been extended to include the following features:
 
 1. Extension/generation of additional shares from an existing threshold of shares.
-2. Support for raw entropy export/import.
+2. Support for raw entropy export/import. Please note that raw entropy is serialized as-is into the coefficients of the polynomial; therefore, it must be of the exact length. Please be aware that using raw entropy can be risky. It is crucial to ensure that you are using a source of strong and high-quality entropy.
 
-# ssss-js
+---
 
 This project is a JavaScript version of [Shamir's Secret Sharing
 Scheme](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing). It has 2
