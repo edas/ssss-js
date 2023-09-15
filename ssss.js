@@ -387,7 +387,10 @@
 
       let exportedEntropy = '';
 
-      if (token.length > MAXTOKENLEN) { fatal('Token too long') }
+      if (token.length > MAXTOKENLEN) {
+        throw 'Token too long';
+      }
+
       for (fmtLen = 1, i = this.opt_number; i >= 10; i /= 10, fmtLen++);
 
       var optSecurity
@@ -397,7 +400,7 @@
         optSecurity = 8 * buf.length
       }
       if (!fieldSizeValid(optSecurity)) {
-        fatal('Security level invalid (secret too long?)')
+        throw 'Security level invalid (secret too long?)';
       }
 
       this.degree = optSecurity
@@ -406,7 +409,7 @@
       if (useCustomEntropy) {
         const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1);
         if (!entropy || entropy.length !== expectedLength) {
-          fatal(`Raw entropy must be a hexadecimal string of length: ${expectedLength}`);
+          throw `Raw entropy must be a hexadecimal string of length: ${expectedLength}`;
         }
       }
 
