@@ -5,6 +5,7 @@
   var BN = require('bignumber.js')
   BN.config({EXPONENTIAL_AT: 100})
   var mpz = require('./mpz.js')
+  var crypto = require('crypto');
 
   var SSSS
   var MAXDEGREE = 1024
@@ -165,16 +166,11 @@
     /* routines for the random number generator */
 
     function cprngRead (deg) {
-      var buf = new Uint8Array(deg / 8)
-      mpz.randIntArray(buf)
-      // For debug only!
-      // buf.forEach(function(v, i, a) {
-      //  a[i] = i;
-      // });
+      var buf = new Uint8Array(deg / 8);
+      crypto.randomFillSync(buf);
+
       return mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
     }
-
-    /* a 64 bit pseudo random permutation (based on the XTEA cipher) */
 
     /**
      * @param {Uint32Array} v
@@ -377,13 +373,19 @@
      * @param {String} token An optional text token used to name shares in order to
      * avoid confusion in case one utilizes secret sharing to protect several
      * independent secrets. The generated shares are prefixed by these tokens.
+     * @param {String} options Additional options
      */
-    P.split = function (buf, token) {
+
+    P.split = function (buf, token, options) {
       var x
       var y
       var coeff = []
       var i
       var fmtLen // Length of the key index number
+
+      const { exportEntropy, useCustomEntropy, entropy } = options;
+
+      let exportedEntropy = '';
 
       if (token.length > MAXTOKENLEN) { fatal('Token too long') }
       for (fmtLen = 1, i = this.opt_number; i >= 10; i /= 10, fmtLen++);
@@ -401,6 +403,13 @@
       this.degree = optSecurity
       this.poly = fieldInit(this.degree)
 
+      if (useCustomEntropy) {
+        const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1);
+        if (!entropy || entropy.length !== expectedLength) {
+          fatal(`Raw entropy must be a hexadecimal string of length: ${expectedLength}`);
+        }
+      }
+
       coeff[0] = fieldImport(buf, this.opt_hex, this.degree)
 
       if (this.opt_diffusion) {
@@ -411,8 +420,21 @@
         }
       }
 
+      const cLength = this.degree / 8 * 2;
       for (i = 1; i < this.opt_threshold; i++) {
-        coeff.push(cprngRead(this.degree))
+        let c;
+
+        if (useCustomEntropy) {
+          const startIndex = cLength * (i - 1);
+          c = new BN(`0x${entropy.slice(startIndex, startIndex + cLength)}`);
+        } else {
+          c = cprngRead(this.degree);
+        }
+        coeff.push(c);
+
+        if (exportEntropy) {
+          exportedEntropy += c.toString(16).padStart(cLength, '0');
+        }
       }
 
       var keys = []
@@ -430,7 +452,7 @@
       }
 
       this.field_deinit()
-      return keys
+      return [keys, exportedEntropy];
     }
 
     /* Calculate the secret */

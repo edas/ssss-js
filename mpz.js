@@ -145,13 +145,6 @@ MPZ.prototype.set_str = function (s, base) {
   return big
 }
 
-/** Fills the given array with random unsigned integer numbers. */
-MPZ.prototype.randIntArray = function (arr) {
-  var max = this.mul_2exp(1, arr.BYTES_PER_ELEMENT * 8).minus(1)
-  arr.forEach(function (val, idx, a) {
-    a[idx] = max.times(BN.random()).truncated().toNumber()
-  })
-}
 
 MPZ.prototype.ORDER_MSB = true  // +1 in GMP
 MPZ.prototype.ORDER_LSB = false // -1 in GMP

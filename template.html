@@ -55,24 +55,46 @@
       <table align="center">
         <tr>
           <td align="center">
-            Threshold:<br/>
+            Threshold:
             <input type="number" id="threshold" size="2" maxlength="2" value="3">
+            <br/>
           </td>
           <td align="center">
-            Shares:<br/>
+            Shares:
             <input type="number" id="numShares" size="2" maxlength="2" value="6">
+            <br/>
           </td>
           <td>
-            Token (optional):<br/>
+            Token (optional):
             <input type="text" id="token">
+            <br/>
           </td>
         </tr>
         <tr>
-          <td colspan="2" align="center">
+          <td colspan="2" align="left">
             Secret: <input type="text" id="secret" size="30"><br/>
           </td>
-          <td align="center">
+          <td colspan="2" align="left">
             Hex input: <input type="checkbox" id="hexInput"><br/>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" align="left">
+            Show raw entropy details: <input type="checkbox" id="showRawEntropy" onclick="toggleShowRawEntropy()"><br/>
+          </td>
+
+          <td id="useCustomEntropyRow" colspan="2" align="left" style="display:none">
+            Use custom raw entropy: <input type="checkbox" id="useCustomRawEntropy"  onclick="toggleUseCustomRawEntropy()"><br/>
+          </td>
+        </tr>
+        <tr id="entropyRow" style="display:none">
+          <td colspan="3">
+            <pre><textarea id="rawEntropy" rows="6" cols="70" disabled readonly></textarea></pre>
+          </td>
+        </tr>
+        <tr id="entropyWarning" style="display:none">
+          <td colspan="3">
+            <div class="log_warn">Rawentropy is an advanced feature. Your secret may be insecure if this feature is used incorrectly.</div>
           </td>
         </tr>
         <tr>
@@ -212,28 +234,42 @@
       clearLogs('#splitLog');
       logTo(document.querySelector('#splitLog'));
 
-      var threshold = document.getElementById("threshold").value;
-      var numShares = document.getElementById("numShares").value;
-      var token     = document.getElementById("token").value.trim();
-      var secret    = document.getElementById("secret").value;
-      var hexInput  = document.getElementById("hexInput").checked;
+      const threshold = document.getElementById("threshold").value;
+      const numShares = document.getElementById("numShares").value;
+      const token = document.getElementById("token").value.trim();
+      const secret = document.getElementById("secret").value;
+      const hexInput = document.getElementById("hexInput").checked;
+      const showRawEntropy = document.getElementById('showRawEntropy').checked;
+      const useCustomEntropy = document.getElementById('useCustomRawEntropy').checked;
+      const rawEntropy = document.getElementById('rawEntropy');
 
       try {
-        var elem = document.getElementById("generatedKeys");
-        var elem2 = document.getElementById("keysToCombine");
-        var elem3 = document.getElementById("keysToExtend");
-        var elem4 = document.getElementById("extendedShares");
+        const elem = document.getElementById("generatedKeys");
+        const elem2 = document.getElementById("keysToCombine");
+        const elem3 = document.getElementById("keysToExtend");
+        const elem4 = document.getElementById("extendedShares");
         elem.value = "";
         elem2.value = "";
         elem3.value = "";
         elem4.value = "";
 
-        var s = new ssss.SSSS(parseInt(threshold), parseInt(numShares), hexInput);
-        var keys = s.split(secret, token);
+        const s = new ssss.SSSS(parseInt(threshold), parseInt(numShares), hexInput);
+
+        const options = {
+          exportEntropy: showRawEntropy,
+          useCustomEntropy,
+          entropy: rawEntropy.value
+        };
+
+        const [keys, exportedEntropy] = s.split(secret, token, options);
 
         elem.value = keys.join("\n");
         elem2.value = keys.slice(0, threshold).join("\n");
         elem3.value = elem2.value;
+
+        if (showRawEntropy) {
+          rawEntropy.value = exportedEntropy;
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -285,6 +321,48 @@
         console.error(e);
       } finally {
         logRestore();
+      }
+    }
+
+    function toggleShowRawEntropy() {
+      const entropyRow = document.getElementById('entropyRow');
+      const showRawEntropy = document.getElementById('showRawEntropy');
+      const showRawEntropyWarning = document.getElementById('entropyWarning');
+      const rawEntropy = document.getElementById('rawEntropy');
+      const useCustomEntropy = document.getElementById('useCustomRawEntropy');
+      const useCustomEntropyRow = document.getElementById('useCustomEntropyRow');
+
+      if (showRawEntropy.checked) {
+        entropyRow.style = "";
+        showRawEntropyWarning.style = "";
+        useCustomEntropyRow.style = "";
+      } else {
+        entropyRow.style = "display: none;";
+        showRawEntropyWarning.style = "display: none;";
+        useCustomEntropyRow.style = "display: none;";
+        useCustomRawEntropy.checked = false;
+        rawEntropy.value = "";
+      }
+
+      if (useCustomEntropy.checked) {
+        rawEntropy.removeAttribute("disabled");
+        rawEntropy.readOnly = false;
+      } else {
+        rawEntropy.setAttribute("disabled", "disabled");
+        rawEntropy.readOnly = true;
+      }
+    }
+
+    function toggleUseCustomRawEntropy() {
+      const useCustomEntropy = document.getElementById('useCustomRawEntropy').checked;
+      const rawEntropy = document.getElementById('rawEntropy');
+
+      if (useCustomEntropy) {
+        rawEntropy.removeAttribute("disabled");
+        rawEntropy.readOnly = false;
+      } else {
+        rawEntropy.setAttribute("disabled", "disabled");
+        rawEntropy.readOnly = true;
       }
     }
 
