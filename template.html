@@ -34,6 +34,12 @@
     less than or equal to the number of shares. The <b>Shares</b> value
     determines how many shares will be generated.
 
+    <p>Please note that this scheme may not be suitable for short secrets.
+    This is due to the fact that the length of the secret directly influences
+    both the size of the polynomial's coefficients and the length of the resulting shares.
+    Therefore, when dealing with short secrets, the scheme will only use low entropy, which can render the secret
+    susceptible to relatively straightforward brute force attacks.</p>
+
     <p>The <b>Token</b> is an optional text token used to name shares in order
     to avoid confusion in case one utilizes secret sharing to protect several
     independent secrets. The generated shares are prefixed by these tokens.
