@@ -17,7 +17,8 @@
   },
   "scripts": {
     "test": "npm run lint && qunit",
-    "lint": "standard"
+    "lint": "standard",
+    "bundle": "browserify ssss.js -o ssss.bundle.js"
   },
   "repository": {
     "type": "git",
