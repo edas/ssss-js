@@ -5,7 +5,7 @@
   var BN = require('bignumber.js')
   BN.config({EXPONENTIAL_AT: 100})
   var mpz = require('./mpz.js')
-  var crypto = require('crypto');
+  var crypto = globalObj.crypto;
 
   var SSSS
   var MAXDEGREE = 1024
