@@ -5,7 +5,7 @@
   var BN = require('bignumber.js')
   BN.config({EXPONENTIAL_AT: 100})
   var mpz = require('./mpz.js')
-  var crypto = globalObj.crypto;
+  var randomFillSync = require('./randomfillsync.js')
 
   var SSSS
   var MAXDEGREE = 1024
@@ -167,7 +167,7 @@
 
     function cprngRead (deg) {
       var buf = new Uint8Array(deg / 8);
-      crypto.randomFillSync(buf);
+      randomFillSync(buf);
 
       return mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
     }
