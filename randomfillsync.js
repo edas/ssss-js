@@ -40,7 +40,7 @@ function randomFillSync (buf, offset, size) {
   if (typeof offset === 'undefined') {
     offset = 0
   }
-  if (buf instanceof Uint8Array) {
+  if (!(buf instanceof Uint8Array)) {
     throw new TypeError('"buf" argument must be a Buffer or Uint8Array')
   }
 
