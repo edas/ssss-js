@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   // Point d'entrée principal
   root: '.',
-  
+
   // Configuration pour le build
   build: {
     outDir: 'dist',
@@ -16,13 +16,13 @@ export default defineConfig({
       transformMixedEsModules: true
     }
   },
-  
+
   // Configuration du serveur de développement
   server: {
     port: 3000,
     open: '/example.html'
   },
-  
+
   // Optimisations
   optimizeDeps: {
     include: ['./ssss.js', './mpz.js'],

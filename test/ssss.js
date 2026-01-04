@@ -1,12 +1,12 @@
 /* global QUnit */
-const SSSS = require('../ssss.js')
+import SSSS from '../ssss.js'
 
 QUnit.test('encode decode short', function (assert) {
   const threshold = 4
   const numKeys = 6
   const foo = new SSSS(threshold, numKeys)
   const secretIn = 'abcdefgh'
-  const keys = foo.split(secretIn, 'tkn')
+  const [keys] = foo.split(secretIn, 'tkn')
   // console.log(keys)
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log('Combined using same obj: ' + secretOut)
@@ -25,7 +25,7 @@ QUnit.test('encode decode long', function (assert) {
   const foo = new SSSS(threshold, numKeys)
   // var secretIn = "abcdefghiáñòâé";
   const secretIn = 'abcdefghijklmnopqrstuvwxyz'
-  const keys = foo.split(secretIn, 'tkn')
+  const [keys] = foo.split(secretIn, 'tkn')
   // console.log(keys)
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log('Combined using same obj: ' + secretOut)
@@ -46,7 +46,7 @@ QUnit.test('encode decode hex', function (assert) {
 
   const secretIn = '7bcd123411223344'
   // var secretIn = "abcd0123";
-  const keys = foo.split(secretIn, 'foo')
+  const [keys] = foo.split(secretIn, 'foo')
   // console.log(keys);
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log("Combined using same obj: " + secretOut);

@@ -1,5 +1,5 @@
 /* global QUnit */
-const mpz = require('../mpz.js')
+import mpz from '../mpz.js'
 
 QUnit.test('sizeinbase', function (assert) {
   assert.strictEqual(mpz.sizeinbase(0, 2), 1, 'positive binary')
