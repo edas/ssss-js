@@ -6,7 +6,7 @@ QUnit.test('encode decode short', function (assert) {
   var numKeys = 6
   var foo = new SSSS(threshold, numKeys)
   var secretIn = 'abcdefgh'
-  var keys = foo.split(secretIn, 'tkn')
+  var [keys] = foo.split(secretIn, 'tkn')
   console.log(keys)
   var secretOut = foo.combine(keys.slice(0, threshold))
   console.log('Combined using same obj: ' + secretOut)
@@ -25,7 +25,7 @@ QUnit.test('encode decode long', function (assert) {
   var foo = new SSSS(threshold, numKeys)
   // var secretIn = "abcdefghiáñòâé";
   var secretIn = 'abcdefghijklmnopqrstuvwxyz'
-  var keys = foo.split(secretIn, 'tkn')
+  var [keys] = foo.split(secretIn, 'tkn')
   console.log(keys)
   var secretOut = foo.combine(keys.slice(0, threshold))
   console.log('Combined using same obj: ' + secretOut)
@@ -46,7 +46,7 @@ QUnit.test('encode decode hex', function (assert) {
 
   var secretIn = '7bcd123411223344'
   // var secretIn = "abcd0123";
-  var keys = foo.split(secretIn, 'foo')
+  var [keys] = foo.split(secretIn, 'foo')
   // console.log(keys);
   var secretOut = foo.combine(keys.slice(0, threshold))
   // console.log("Combined using same obj: " + secretOut);
