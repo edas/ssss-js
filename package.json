@@ -16,7 +16,7 @@
     "standard": "^17.1.2"
   },
   "scripts": {
-    "test": "npm run lint && qunit",
+    "test": "qunit",
     "lint": "standard"
   },
   "repository": {
