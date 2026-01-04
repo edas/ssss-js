@@ -3,12 +3,28 @@
 
 ## Fork Notes
 
-Please note that this tool was originally forked from <https://github.com/gburca/ssss-js> and has been extended to include the following features:
+### This fork
+
+This tool is a fork of <https://github.com/lbeder/ssss-js> and has been modified to:
+
+- Fix errors in tests and linting
+- Update dependencies to the latest versions
+- Move build scripts in package.json instead of makefile
+- Migrate to ES6 modules
+- Use Vite for building the HTML example
+- Use native BigInt instead of bignumber.js
+- Use native WebCrypto instead of the node crypto module
+
+The one-file HTML is not a goal for this version. It is meant to be use elsewhere.
+
+### Fork of Lebder
+
+The Lebder's version is itself a fork of <https://github.com/gburca/ssss-js> and has been extended to include the following features:
 
 1. Extension/generation of additional shares from an existing threshold of shares.
 2. Support for raw entropy export/import. Please note that raw entropy is serialized as-is into the coefficients of the polynomial; therefore, it must be of the exact length. Please be aware that using raw entropy can be risky. It is crucial to ensure that you are using a source of strong and high-quality entropy.
 
----
+### Original Gburca version
 
 This project is a JavaScript version of [Shamir's Secret Sharing
 Scheme](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing). It has 2
@@ -38,32 +54,39 @@ secure as the browser or PC it's being used on. Additionally, it eliminates the
 need to rely on a 3rd party web site page that may or may not be available in
 the future.
 
-Usage
-=====
-
-- Try it out at <https://ebixio.com/ssss.html>
-- For offline use:
-  - Download `ssss.html` from <https://ebixio.com/ssss.html> or <https://github.com/gburca/ssss-js/releases>
-  - Open up the downloaded page with a browser and follow the simple instructions.
-
-Build
-=====
-
-- A simple `Makefile` is provided to assist with generating the stand-alone
-  `html` page.
-- `npm` package is at: <https://www.npmjs.com/package/ssss-js>
-
-Test
-====
-
-- Since all the tests are in `test/*`:
+## Usage
 
 ```
-    ./node_modules/qunitjs/bin/qunit
+import ssss from './ssss.js';
+const threshold = 3;
+const shares = 5; // only important for `split`
+const hexInput = false;
+const s = new ssss(threshold, numShares, hexInput);
+
+// generate keys
+const prefix = "20251231"; // may not contain "-" 
+const secret = "my little secret"; // ascii for hexInput=false
+const [keys] = s.split(secret, prefix, options);
+
+
+// recover the secret
+conse usedKeys = keys.slice(0, 3);
+const recoveredSecret = s.combine(usedKeys);
+
+// generate missing or new keys
+const newShare = s.extend(keys, threshold, token); 
 ```
 
-OR (during development) if you have `entr`:
+Or try `pnpm run build` and open the file in dist/example.html
+
+## Build and contributions
 
 ```
-    ls *.js test/*.js | entr -c ./node_modules/qunitjs/bin/qunit
+pnpm install
+pnpm run dev
+```
+
+```
+pnpm run lint
+pnpm run test
 ```
