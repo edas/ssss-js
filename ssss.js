@@ -1,7 +1,5 @@
 'use strict'
 
-const BN = require('bignumber.js')
-BN.config({ EXPONENTIAL_AT: 100 })
 const mpz = require('./mpz.js')
 const crypto = require('crypto')
 
@@ -46,7 +44,7 @@ function fieldSizeValid (deg) {
 
 /**
  * if hexmode == false, s is a string, else it's a byte array.
- * @returns {BigNumber}
+ * @returns {BigInt}
  */
 function fieldImport (s, hexmode, deg) {
   if (hexmode) {
@@ -55,7 +53,7 @@ function fieldImport (s, hexmode, deg) {
       warning('input string too short, adding null padding on the left')
     }
     const x = mpz.set_str(s, 16)
-    if (x.isNegative()) {
+    if (x < 0n) {
       fatal('invalid syntax')
     }
     return x
@@ -121,11 +119,11 @@ const P = SSSS.prototype
 
 P.field_mult = function (x, y) {
   let z
-  let b = x
+  let b = BigInt(x)
   if (mpz.tstbit(y, 0)) {
     z = b
   } else {
-    z = new BN(0)
+    z = 0n
   }
 
   for (let i = 1; i < this.degree; i++) {
@@ -140,10 +138,10 @@ P.field_mult = function (x, y) {
 P.field_invert = function (x) {
   assert(mpz.cmp_ui(x, 0))
   let h
-  let u = x
+  let u = BigInt(x)
   let v = this.poly
-  let g = new BN(0)
-  let z = new BN(1)
+  let g = 0n
+  let z = 1n
   while (mpz.cmp_ui(u, 1)) {
     let i = mpz.sizeinbits(u) - mpz.sizeinbits(v)
     if (i < 0) {
@@ -220,7 +218,7 @@ function encodeSlice (data, idx, len, processBlock) {
 }
 
 /**
- * @param {BigNumber} x
+ * @param {BigInt} x
  * @param {Number} encdecmode ENCODE | DECODE
  * @return x
  */
@@ -266,12 +264,12 @@ function encodeMpz (x, encdecmode, deg) {
 
 /**
  * @param {Number} n
- * @param {BigNumber} x
- * @param {BigNumber array} coeff
+ * @param {BigInt} x
+ * @param {BigInt array} coeff
  * @returns y
  */
 P.horner = function (n, x, coeff) {
-  let y = new BN(x)
+  let y = BigInt(x)
   for (let i = n - 1; i; i--) {
     y = fieldAdd(y, coeff[i])
     y = this.field_mult(y, x)
@@ -282,12 +280,12 @@ P.horner = function (n, x, coeff) {
 
 /**
  * @param {Number} n
- * @param {BigNumber[][]} A 2D array
- * @param {BigNumber[]} b 1D array
+ * @param {BigInt[][]} A 2D array
+ * @param {BigInt[]} b 1D array
  */
 P.restore_secret = function (n, AA, b, coeff) {
   let i, j, k, found
-  let h = new BN(0)
+  let h = 0n
   const t = this
 
   for (i = 0; i < n; i++) {
@@ -361,7 +359,7 @@ function fieldInit (deg) {
 }
 
 P.field_deinit = function () {
-  this.poly = new BN(0)
+  this.poly = 0n
 }
 
 /**
@@ -425,7 +423,7 @@ P.split = function (buf, token, options) {
 
     if (useCustomEntropy) {
       const startIndex = cLength * (i - 1)
-      c = new BN(`0x${entropy.slice(startIndex, startIndex + cLength)}`)
+      c = BigInt('0x' + entropy.slice(startIndex, startIndex + cLength))
     } else {
       c = cprngRead(this.degree)
     }
@@ -438,7 +436,7 @@ P.split = function (buf, token, options) {
 
   const keys = []
   for (i = 0; i < this.opt_number; i++) {
-    x = new BN(i + 1)
+    x = BigInt(i + 1)
     y = this.horner(this.opt_threshold, x, coeff)
     let key = ''
     if (token) {
@@ -503,8 +501,8 @@ P._combine = function (shares) {
 
     j = parseInt(a)
     if (isNaN(j)) fatal('invalid share')
-    x = new BN(j)
-    A[this.opt_threshold - 1][i] = new BN(1)
+    x = BigInt(j)
+    A[this.opt_threshold - 1][i] = 1n
 
     for (j = this.opt_threshold - 2; j >= 0; j--) {
       A[j][i] = this.field_mult(A[j + 1][i], x)
@@ -570,7 +568,7 @@ P.extend = function (shares, optThreshold, token) {
     }
   }
 
-  const x = new BN(nextIndex)
+  const x = BigInt(nextIndex)
   const y = this.horner(optThreshold, x, coeff)
 
   let share = ''
@@ -579,8 +577,8 @@ P.extend = function (shares, optThreshold, token) {
   }
 
   let fmtLen = 1
-  let i = Math.max(shares.length + 1, nextIndex)
-  for (; i >= 10; i /= 10, fmtLen++) {
+  let idx = Math.max(shares.length + 1, nextIndex)
+  for (; idx >= 10; idx /= 10, fmtLen++) {
     // Empty loop body - only side effects in condition
   }
 

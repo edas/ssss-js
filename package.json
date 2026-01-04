@@ -6,9 +6,6 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {
-    "bignumber.js": "^9.3.1"
-  },
   "devDependencies": {
     "qunit": "^2.25.0",
     "standard": "^17.1.0"

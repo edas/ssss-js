@@ -1,5 +1,4 @@
 /* global QUnit */
-const BN = require('bignumber.js')
 const mpz = require('../mpz.js')
 
 QUnit.test('sizeinbase', function (assert) {
@@ -23,9 +22,9 @@ QUnit.test('cmp_ui', function (assert) {
 })
 
 QUnit.test('mul_2exp', function (assert) {
-  assert.ok(mpz.mul_2exp(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
-  assert.ok(mpz.lshift(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
-  assert.ok(mpz.mul_2exp(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
+  assert.strictEqual(mpz.mul_2exp(7, 3), 7n * 8n)
+  assert.strictEqual(mpz.lshift(7, 3), 7n * 8n)
+  assert.strictEqual(mpz.mul_2exp(7, 3), 56n)
 })
 
 QUnit.test('swap', function (assert) {
@@ -60,30 +59,31 @@ QUnit.test('tstbit', function (assert) {
 })
 
 QUnit.test('or', function (assert) {
-  assert.ok(mpz.or(0, 0).isEqualTo(0))
-  assert.ok(mpz.or(1, 2).isEqualTo(3))
-  assert.ok(mpz.or(2, 1).isEqualTo(3))
-  assert.ok(mpz.or(0, 5).isEqualTo(5))
+  assert.strictEqual(mpz.or(0, 0), 0n)
+  assert.strictEqual(mpz.or(1, 2), 3n)
+  assert.strictEqual(mpz.or(2, 1), 3n)
+  assert.strictEqual(mpz.or(0, 5), 5n)
 
   //  11 = ...01011
   // -11 = ...10101
   //   3 = ...00011
   //          10111 = -11 | 3 = 23
   //          01011 =  11 | 3 = 11
-  assert.ok(mpz.or(-11, 3).isEqualTo(23))
+  assert.strictEqual(mpz.or(-11, 3), 23n)
 })
 
 QUnit.test('xor', function (assert) {
-  assert.ok(mpz.xor(0, 0).isEqualTo(0))
-  assert.ok(mpz.xor(0, 1).isEqualTo(1))
-  assert.ok(mpz.xor(1, 0).isEqualTo(1))
-  assert.ok(mpz.xor(1, 1).isEqualTo(0))
+  assert.strictEqual(mpz.xor(0, 0), 0n)
+  assert.strictEqual(mpz.xor(0, 1), 1n)
+  assert.strictEqual(mpz.xor(1, 0), 1n)
+  assert.strictEqual(mpz.xor(1, 1), 0n)
 
   function f (a, b, exp) {
-    a = new BN(a, 2)
-    b = new BN(b, 2)
-    exp = new BN(exp, 2)
-    return mpz.xor(a, b).isEqualTo(exp) && mpz.xor(b, a).isEqualTo(exp)
+    // Handle negative binary strings (e.g., '-100')
+    a = a.startsWith('-') ? -BigInt('0b' + a.slice(1)) : BigInt('0b' + a)
+    b = b.startsWith('-') ? -BigInt('0b' + b.slice(1)) : BigInt('0b' + b)
+    exp = exp.startsWith('-') ? -BigInt('0b' + exp.slice(1)) : BigInt('0b' + exp)
+    return mpz.xor(a, b) === exp && mpz.xor(b, a) === exp
   }
 
   assert.ok(f('1010', '1100', '0110'))
@@ -100,53 +100,53 @@ QUnit.test('xor', function (assert) {
     '-100', // = -4 = ...1100 in 2's
     '110'))
 
-  assert.ok(mpz.xor(new BN('101', 2), 0).isEqualTo(5))
+  assert.strictEqual(mpz.xor(5n, 0n), 5n)
 })
 
 QUnit.test('setbit', function (assert) {
-  assert.ok(mpz.setbit(0, 0).isEqualTo(1))
-  assert.ok(mpz.setbit(1, 0).isEqualTo(1))
-  assert.ok(mpz.setbit(2, 0).isEqualTo(3))
-  assert.ok(mpz.setbit(0, 2).isEqualTo(4))
+  assert.strictEqual(mpz.setbit(0, 0), 1n)
+  assert.strictEqual(mpz.setbit(1, 0), 1n)
+  assert.strictEqual(mpz.setbit(2, 0), 3n)
+  assert.strictEqual(mpz.setbit(0, 2), 4n)
 
   // Not intuitive at all. -4 is -100 in 2's. When we set bit-1 we get -110
   // which is -6 in sign-magnitude notation.
-  assert.ok(mpz.setbit(-4, 1).isEqualTo(-6))
+  assert.strictEqual(mpz.setbit(-4, 1), -6n)
 })
 
 QUnit.test('import', function (assert) {
-  const expected = new BN('12345678', 16)
+  const expected = 0x12345678n
   let imported
 
   // Try orderMSB and LSB
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_MSB,
     new Uint8Array([0x12, 0x34, 0x56, 0x78]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_MSB,
     new Uint8Array([0x78, 0x56, 0x34, 0x12]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
 
   // Ensure endian makes no difference for uint8 arrays
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_LSB,
     new Uint8Array([0x12, 0x34, 0x56, 0x78]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_LSB,
     new Uint8Array([0x78, 0x56, 0x34, 0x12]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
 
   // The goad of each import is to get to 0x12345678
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_MSB,
     new Uint16Array([0x3412, 0x7856]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_MSB,
     new Uint16Array([0x7856, 0x3412]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_LSB,
     new Uint16Array([0x1234, 0x5678]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_LSB,
     new Uint16Array([0x5678, 0x1234]))
-  assert.ok(imported.isEqualTo(expected))
+  assert.strictEqual(imported, expected)
 
   const buf = 'abcdef'
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
@@ -154,7 +154,7 @@ QUnit.test('import', function (assert) {
 })
 
 QUnit.test('export', function (assert) {
-  const bigVal1 = new BN('12345678', 16)
+  const bigVal1 = 0x12345678n
 
   let exp, act
 
@@ -178,7 +178,7 @@ QUnit.test('export', function (assert) {
   act = mpz.export(mpz.ORDER_MSB, 2, mpz.ENDIAN_LSB, bigVal1)
   assert.deepEqual(act, exp)
 
-  const bigVal2 = new BN('123456', 16)
+  const bigVal2 = 0x123456n
 
   exp = Uint16Array.from([0x1200, 0x5634])
   act = mpz.export(mpz.ORDER_MSB, 2, mpz.ENDIAN_MSB, bigVal2)
