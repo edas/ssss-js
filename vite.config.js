@@ -11,7 +11,7 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        main: './template.html'
+        main: './example.html'
       }
     },
   }
