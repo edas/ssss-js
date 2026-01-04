@@ -19,7 +19,7 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       qunit:
-        specifier: ^2.4.1
+        specifier: ^2.25.0
         version: 2.25.0
       standard:
         specifier: ^17.1.2
