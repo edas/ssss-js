@@ -1,7 +1,6 @@
 'use strict'
 
 const mpz = require('./mpz.js')
-const crypto = require('crypto')
 
 const MAXDEGREE = 1024
 const MAXTOKENLEN = 128
@@ -161,7 +160,7 @@ P.field_invert = function (x) {
 
 function cprngRead (deg) {
   const buf = new Uint8Array(deg / 8)
-  crypto.randomFillSync(buf)
+  crypto.getRandomValues(buf)
 
   return mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
 }
