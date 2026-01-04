@@ -23,9 +23,9 @@ QUnit.test('cmp_ui', function (assert) {
 })
 
 QUnit.test('mul_2exp', function (assert) {
-  assert.ok(mpz.mul_2exp(7, 3).equals(new BN(7 * (2 * 2 * 2))))
-  assert.ok(mpz.lshift(7, 3).equals(new BN(7 * (2 * 2 * 2))))
-  assert.ok(mpz.mul_2exp(7, 3).equals(new BN(7 * (2 * 2 * 2))))
+  assert.ok(mpz.mul_2exp(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
+  assert.ok(mpz.lshift(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
+  assert.ok(mpz.mul_2exp(7, 3).isEqualTo(new BN(7 * (2 * 2 * 2))))
 })
 
 QUnit.test('swap', function (assert) {
@@ -60,30 +60,30 @@ QUnit.test('tstbit', function (assert) {
 })
 
 QUnit.test('or', function (assert) {
-  assert.ok(mpz.or(0, 0).equals(0))
-  assert.ok(mpz.or(1, 2).equals(3))
-  assert.ok(mpz.or(2, 1).equals(3))
-  assert.ok(mpz.or(0, 5).equals(5))
+  assert.ok(mpz.or(0, 0).isEqualTo(0))
+  assert.ok(mpz.or(1, 2).isEqualTo(3))
+  assert.ok(mpz.or(2, 1).isEqualTo(3))
+  assert.ok(mpz.or(0, 5).isEqualTo(5))
 
   //  11 = ...01011
   // -11 = ...10101
   //   3 = ...00011
   //          10111 = -11 | 3 = 23
   //          01011 =  11 | 3 = 11
-  assert.ok(mpz.or(-11, 3).equals(23))
+  assert.ok(mpz.or(-11, 3).isEqualTo(23))
 })
 
 QUnit.test('xor', function (assert) {
-  assert.ok(mpz.xor(0, 0).equals(0))
-  assert.ok(mpz.xor(0, 1).equals(1))
-  assert.ok(mpz.xor(1, 0).equals(1))
-  assert.ok(mpz.xor(1, 1).equals(0))
+  assert.ok(mpz.xor(0, 0).isEqualTo(0))
+  assert.ok(mpz.xor(0, 1).isEqualTo(1))
+  assert.ok(mpz.xor(1, 0).isEqualTo(1))
+  assert.ok(mpz.xor(1, 1).isEqualTo(0))
 
   function f (a, b, exp) {
     a = new BN(a, 2)
     b = new BN(b, 2)
     exp = new BN(exp, 2)
-    return mpz.xor(a, b).equals(exp) && mpz.xor(b, a).equals(exp)
+    return mpz.xor(a, b).isEqualTo(exp) && mpz.xor(b, a).isEqualTo(exp)
   }
 
   assert.ok(f('1010', '1100', '0110'))
@@ -100,18 +100,18 @@ QUnit.test('xor', function (assert) {
               '-100',  // = -4 = ...1100 in 2's
                '110'))
 
-  assert.ok(mpz.xor(new BN('101', 2), 0).equals(5))
+  assert.ok(mpz.xor(new BN('101', 2), 0).isEqualTo(5))
 })
 
 QUnit.test('setbit', function (assert) {
-  assert.ok(mpz.setbit(0, 0).equals(1))
-  assert.ok(mpz.setbit(1, 0).equals(1))
-  assert.ok(mpz.setbit(2, 0).equals(3))
-  assert.ok(mpz.setbit(0, 2).equals(4))
+  assert.ok(mpz.setbit(0, 0).isEqualTo(1))
+  assert.ok(mpz.setbit(1, 0).isEqualTo(1))
+  assert.ok(mpz.setbit(2, 0).isEqualTo(3))
+  assert.ok(mpz.setbit(0, 2).isEqualTo(4))
 
   // Not intuitive at all. -4 is -100 in 2's. When we set bit-1 we get -110
   // which is -6 in sign-magnitude notation.
-  assert.ok(mpz.setbit(-4, 1).equals(-6))
+  assert.ok(mpz.setbit(-4, 1).isEqualTo(-6))
 })
 
 QUnit.test('import', function (assert) {
@@ -121,32 +121,32 @@ QUnit.test('import', function (assert) {
   // Try orderMSB and LSB
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_MSB,
                 new Uint8Array([0x12, 0x34, 0x56, 0x78]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_MSB,
                 new Uint8Array([0x78, 0x56, 0x34, 0x12]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
 
   // Ensure endian makes no difference for uint8 arrays
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_LSB,
                 new Uint8Array([0x12, 0x34, 0x56, 0x78]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_LSB,
                 new Uint8Array([0x78, 0x56, 0x34, 0x12]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
 
   // The goad of each import is to get to 0x12345678
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_MSB,
             new Uint16Array([0x3412, 0x7856]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_MSB,
             new Uint16Array([0x7856, 0x3412]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_LSB,
             new Uint16Array([0x1234, 0x5678]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
   imported = mpz.import(mpz.ORDER_LSB, mpz.ENDIAN_LSB,
             new Uint16Array([0x5678, 0x1234]))
-  assert.ok(imported.equals(expected))
+  assert.ok(imported.isEqualTo(expected))
 
   var buf = 'abcdef'
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)

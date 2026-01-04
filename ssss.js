@@ -5,7 +5,7 @@
   var BN = require('bignumber.js')
   BN.config({EXPONENTIAL_AT: 100})
   var mpz = require('./mpz.js')
-  var crypto = require('crypto');
+  var crypto = require('crypto')
 
   var SSSS
   var MAXDEGREE = 1024
@@ -166,8 +166,8 @@
     /* routines for the random number generator */
 
     function cprngRead (deg) {
-      var buf = new Uint8Array(deg / 8);
-      crypto.randomFillSync(buf);
+      var buf = new Uint8Array(deg / 8)
+      crypto.randomFillSync(buf)
 
       return mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
     }
@@ -328,17 +328,17 @@
       b[n - 1] = t.field_mult(b[n - 1], h)
 
       // Transform AA to identity matrix and calculate other coefficients to recover other shares
-      coeff.push(b[n - 1]);
+      coeff.push(b[n - 1])
 
       for (i = n - 2; i >= 0; i--) {
         for (j = n - 1; j > i; j--) {
-          h = t.field_mult(b[j], AA[j][i]);
-          b[i] = fieldAdd(b[i], h);
+          h = t.field_mult(b[j], AA[j][i])
+          b[i] = fieldAdd(b[i], h)
         }
-        h = t.field_invert(AA[i][i]);
-        b[i] = t.field_mult(b[i], h);
+        h = t.field_invert(AA[i][i])
+        b[i] = t.field_mult(b[i], h)
 
-        coeff.push(b[i]);
+        coeff.push(b[i])
       }
 
       return 0
@@ -383,12 +383,12 @@
       var i
       var fmtLen // Length of the key index number
 
-      const { exportEntropy, useCustomEntropy, entropy } = options;
+      const { exportEntropy, useCustomEntropy, entropy } = options || {}
 
-      let exportedEntropy = '';
+      let exportedEntropy = ''
 
       if (token.length > MAXTOKENLEN) {
-        throw 'Token too long';
+        throw new Error('Token too long')
       }
 
       for (fmtLen = 1, i = this.opt_number; i >= 10; i /= 10, fmtLen++);
@@ -400,16 +400,16 @@
         optSecurity = 8 * buf.length
       }
       if (!fieldSizeValid(optSecurity)) {
-        throw 'Security level invalid (secret too long?)';
+        throw new Error('Security level invalid (secret too long?)')
       }
 
       this.degree = optSecurity
       this.poly = fieldInit(this.degree)
 
       if (useCustomEntropy) {
-        const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1);
+        const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1)
         if (!entropy || entropy.length !== expectedLength) {
-          throw `Raw entropy must be a hexadecimal string of length: ${expectedLength}`;
+          throw new Error(`Raw entropy must be a hexadecimal string of length: ${expectedLength}`)
         }
       }
 
@@ -423,20 +423,20 @@
         }
       }
 
-      const cLength = this.degree / 8 * 2;
+      const cLength = this.degree / 8 * 2
       for (i = 1; i < this.opt_threshold; i++) {
-        let c;
+        let c
 
         if (useCustomEntropy) {
-          const startIndex = cLength * (i - 1);
-          c = new BN(`0x${entropy.slice(startIndex, startIndex + cLength)}`);
+          const startIndex = cLength * (i - 1)
+          c = new BN(`0x${entropy.slice(startIndex, startIndex + cLength)}`)
         } else {
-          c = cprngRead(this.degree);
+          c = cprngRead(this.degree)
         }
-        coeff.push(c);
+        coeff.push(c)
 
         if (exportEntropy) {
-          exportedEntropy += c.toString(16).padStart(cLength, '0');
+          exportedEntropy += c.toString(16).padStart(cLength, '0')
         }
       }
 
@@ -455,17 +455,20 @@
       }
 
       this.field_deinit()
-      return [keys, exportedEntropy];
+      if (exportEntropy) {
+        return [keys, exportedEntropy]
+      }
+      return keys
     }
 
     /* Calculate the secret */
 
     P.combine = function (shares) {
-      var [secret] = this._combine(shares);
+      var [secret] = this._combine(shares)
 
-      this.field_deinit();
+      this.field_deinit()
 
-      return secret;
+      return secret
     }
 
     P._combine = function (shares) {
@@ -515,7 +518,7 @@
         y[i] = fieldAdd(y[i], x)
       }
 
-      const coeff = [];
+      const coeff = []
       if (this.restore_secret(this.opt_threshold, A, y, coeff)) {
         fatal('Shares inconsistent. Perhaps a single share was used twice.')
       }
@@ -528,26 +531,26 @@
         }
       }
 
-      return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff];
+      return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff]
     }
 
-    P.extend = function (shares, opt_threshold, token) {
+    P.extend = function (shares, optThreshold, token) {
       if (token.length > MAXTOKENLEN) {
-        fatal('Token too long');
+        fatal('Token too long')
       }
 
-      var [, coeff] = this._combine(shares);
+      var [, coeff] = this._combine(shares)
 
       // Find the first available index
-      let nextIndex = shares.length + 1;
+      let nextIndex = shares.length + 1
 
-      const indexes = [];
+      const indexes = []
       for (const share of shares) {
-        let currentIndex;
-        const parts = share.split('-');
+        let currentIndex
+        const parts = share.split('-')
         if (token) {
           if (token !== parts[0]) {
-            fatal('invalid share');
+            fatal('invalid share')
           }
 
           currentIndex = parseInt(parts[1])
@@ -559,37 +562,37 @@
           fatal('invalid share')
         }
 
-        indexes.push(currentIndex);
+        indexes.push(currentIndex)
       }
 
-      const sortedIndexes = indexes.sort((a, b) => a - b);
+      const sortedIndexes = indexes.sort((a, b) => a - b)
       for (const [i, currentIndex] of sortedIndexes.entries()) {
         if (currentIndex !== i + 1) {
-          nextIndex = i + 1;
+          nextIndex = i + 1
 
-          break;
+          break
         }
       }
 
-      const x = new BN(nextIndex);
-      const y = this.horner(opt_threshold, x, coeff)
+      const x = new BN(nextIndex)
+      const y = this.horner(optThreshold, x, coeff)
 
-      let share = '';
+      let share = ''
       if (token) {
-        share = token + '-';
+        share = token + '-'
       }
 
-      let fmtLen = 1;
-      let i = Math.max(shares.length + 1, nextIndex);
-      for (; i >= 10; i /= 10, fmtLen++);
+      let fmtLen = 1
+      let i = Math.max(shares.length + 1, nextIndex)
+      for (; i >= 10; i /= 10, fmtLen++) {}
 
       share += pad(nextIndex, fmtLen, '0')
       share += '-'
       share += fieldPrint(y, 1, this.degree)
 
-      this.field_deinit();
+      this.field_deinit()
 
-      return share;
+      return share
     }
 
     return SSSS

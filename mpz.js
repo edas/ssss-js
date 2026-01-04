@@ -25,7 +25,7 @@ MPZ.prototype.sizeinbits = function (v) {
 /** Compare op1 and op2. Return a positive value if op1 > op2, zero if op1 =
  * op2, or a negative value if op1 < op2. */
 MPZ.prototype.cmp_ui = function (v, i) {
-  return (new BN(v)).cmp(new BN(i))
+  return (new BN(v)).comparedTo(new BN(i))
 }
 
 /** Return a new BigNumber whose value is 'v * 2^bitCount'. This operation
@@ -60,7 +60,7 @@ MPZ.prototype.two_compl = function (v) {
   v = new BN(v)
 
   if (!v.isNegative()) { return v }
-  if (v.equals(-1)) { return v } // Otherwise we return -11
+  if (v.isEqualTo(-1)) { return v } // Otherwise we return -11
 
   var min1 = v.abs().minus(1)
   var inv = min1.toString(2).split('').map(function (v) {
@@ -144,7 +144,6 @@ MPZ.prototype.set_str = function (s, base) {
   var big = new BN(s, base)
   return big
 }
-
 
 MPZ.prototype.ORDER_MSB = true  // +1 in GMP
 MPZ.prototype.ORDER_LSB = false // -1 in GMP
