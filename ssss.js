@@ -383,11 +383,12 @@
       var i
       var fmtLen // Length of the key index number
 
+      options = options || {};
       const { exportEntropy, useCustomEntropy, entropy } = options;
 
       let exportedEntropy = '';
 
-      if (token.length > MAXTOKENLEN) {
+      if (token && token.length > MAXTOKENLEN) {
         throw 'Token too long';
       }
 
