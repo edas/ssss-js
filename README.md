@@ -1,14 +1,26 @@
 
 # ssss-js
 
-## Fork Notes
+Fork Notes
+==========
 
-Please note that this tool was originally forked from <https://github.com/gburca/ssss-js> and has been extended to include the following features:
+This version has been forked from <https://github.com/lbeder/ssss-js> and has been modified to have a more modern clean version:
+
+- Update dependencies and fix deprecations
+- Fix failing tests and linter rules, remove console.log
+- Use native WebCrypto and BigInt
+- Move to ES6 modules
+- Build through Vite
+
+The core should be unchanged in security and behavior
+
+The lbeder's version was itself forked from <https://github.com/gburca/ssss-js> and has been extended to include the following features:
 
 1. Extension/generation of additional shares from an existing threshold of shares.
 2. Support for raw entropy export/import. Please note that raw entropy is serialized as-is into the coefficients of the polynomial; therefore, it must be of the exact length. Please be aware that using raw entropy can be risky. It is crucial to ensure that you are using a source of strong and high-quality entropy.
 
----
+Original Notes
+==============
 
 This project is a JavaScript version of [Shamir's Secret Sharing
 Scheme](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing). It has 2
@@ -38,32 +50,38 @@ secure as the browser or PC it's being used on. Additionally, it eliminates the
 need to rely on a 3rd party web site page that may or may not be available in
 the future.
 
+
 Usage
 =====
 
-- Try it out at <https://ebixio.com/ssss.html>
-- For offline use:
-  - Download `ssss.html` from <https://ebixio.com/ssss.html> or <https://github.com/gburca/ssss-js/releases>
-  - Open up the downloaded page with a browser and follow the simple instructions.
+
+````
+import ssss from './ssss.js';
+const threshold = 3;
+const shares = 5; // only important for `split`
+const hexInput = false;
+const s = new ssss(threshold, numShares, hexInput);
+
+// generate keys
+const prefix = "20251231"; // may not contain "-" 
+const secret = "my little secret"; // ascii for hexInput=false
+const [keys] = s.split(secret, prefix, options);
+
+
+// recover the secret
+conse usedKeys = keys.slice(0, 3);
+const recoveredSecret = s.combine(usedKeys);
+
+// generate missing or new keys
+const newShare = s.extend(keys, threshold, token); 
+```
 
 Build
 =====
 
-- A simple `Makefile` is provided to assist with generating the stand-alone
-  `html` page.
-- `npm` package is at: <https://www.npmjs.com/package/ssss-js>
+Install dependencies: `pnpm install` then run the example through `pnpm run dev`
 
-Test
-====
+You can run the linter and tests through `pnpm run lint` and `pnpm run test`
 
-- Since all the tests are in `test/*`:
+A build could be generated through `pnpm run build`
 
-```
-    ./node_modules/qunitjs/bin/qunit
-```
-
-OR (during development) if you have `entr`:
-
-```
-    ls *.js test/*.js | entr -c ./node_modules/qunitjs/bin/qunit
-```

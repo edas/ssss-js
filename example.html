@@ -265,7 +265,7 @@
         elem3.value = "";
         elem4.value = "";
 
-        const s = new ssss.SSSS(parseInt(threshold), parseInt(numShares), hexInput);
+        const s = new ssss(parseInt(threshold), parseInt(numShares), hexInput);
 
         const options = {
           exportEntropy: showRawEntropy,
@@ -300,7 +300,7 @@
         var keys = keyTxt.split("\n").filter(function(key) {
           return key.length > 2;
         });
-        var s = new ssss.SSSS(keys.length, 0, hexOutput);
+        var s = new ssss(keys.length, 0, hexOutput);
         var secret = s.combine(keys);
         document.getElementById("combined").value = secret;
       } catch (e) {
@@ -323,7 +323,7 @@
 
         const newShares = newSharesElem.value ? newSharesElem.value.split("\n") : [];
 
-        const s = new ssss.SSSS(shares.length, 0, false);
+        const s = new ssss(shares.length, 0, false);
         const newShare = s.extend([...shares, ...newShares], shares.length, token);
 
         newShares.push(newShare);
