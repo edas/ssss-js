@@ -13,6 +13,6 @@ export default defineConfig({
       input: {
         main: './example.html'
       }
-    },
+    }
   }
 })
