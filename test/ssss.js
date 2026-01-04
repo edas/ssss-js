@@ -10,13 +10,13 @@ QUnit.test('encode decode short', function (assert) {
   // console.log(keys)
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log('Combined using same obj: ' + secretOut)
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 
   // Single argument ctor (only for combining)
   const foo2 = new SSSS(threshold)
   secretOut = foo2.combine(keys.slice(0, threshold))
   // console.log('Combined using new obj: ' + secretOut)
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 })
 
 QUnit.test('encode decode long', function (assert) {
@@ -29,13 +29,13 @@ QUnit.test('encode decode long', function (assert) {
   // console.log(keys)
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log('Combined using same obj: ' + secretOut)
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 
   // Single argument ctor (only for combining)
   const foo2 = new SSSS(threshold)
   secretOut = foo2.combine(keys.slice(0, threshold))
   // console.log('Combined using new obj: ' + secretOut)
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 })
 
 QUnit.test('encode decode hex', function (assert) {
@@ -50,11 +50,11 @@ QUnit.test('encode decode hex', function (assert) {
   // console.log(keys);
   let secretOut = foo.combine(keys.slice(0, threshold))
   // console.log("Combined using same obj: " + secretOut);
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 
   // When used only for combining, numKeys can be 0.
   const foo2 = new SSSS(threshold, 0, inputIsHex)
   secretOut = foo2.combine(keys.slice(0, threshold))
   // console.log("Combined using new obj: " + secretOut);
-  assert.equal(secretOut, secretIn)
+  assert.strictEqual(secretOut, secretIn)
 })

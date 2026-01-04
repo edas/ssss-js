@@ -3,23 +3,23 @@ const BN = require('bignumber.js')
 const mpz = require('../mpz.js')
 
 QUnit.test('sizeinbase', function (assert) {
-  assert.equal(mpz.sizeinbase(0, 2), 1, 'positive binary')
-  assert.equal(mpz.sizeinbase(5, 2), 3, 'positive binary')
-  assert.equal(mpz.sizeinbase(-5, 2), 3, 'negative binary')
-  assert.equal(mpz.sizeinbase(15, 16), 1, 'Single hex')
-  assert.equal(mpz.sizeinbase(-15, 16), 1, 'Single hex')
-  assert.equal(mpz.sizeinbase(16, 16), 2, 'Single hex')
+  assert.strictEqual(mpz.sizeinbase(0, 2), 1, 'positive binary')
+  assert.strictEqual(mpz.sizeinbase(5, 2), 3, 'positive binary')
+  assert.strictEqual(mpz.sizeinbase(-5, 2), 3, 'negative binary')
+  assert.strictEqual(mpz.sizeinbase(15, 16), 1, 'Single hex')
+  assert.strictEqual(mpz.sizeinbase(-15, 16), 1, 'Single hex')
+  assert.strictEqual(mpz.sizeinbase(16, 16), 2, 'Single hex')
 })
 
 QUnit.test('sizeinbits', function (assert) {
-  assert.equal(mpz.sizeinbits(0), 0)
-  assert.equal(mpz.sizeinbits(1), 1)
+  assert.strictEqual(mpz.sizeinbits(0), 0)
+  assert.strictEqual(mpz.sizeinbits(1), 1)
 })
 
 QUnit.test('cmp_ui', function (assert) {
-  assert.equal(mpz.cmp_ui(2, 1), 1)
-  assert.equal(mpz.cmp_ui(1, 2), -1)
-  assert.equal(mpz.cmp_ui(2, 2), 0)
+  assert.strictEqual(mpz.cmp_ui(2, 1), 1)
+  assert.strictEqual(mpz.cmp_ui(1, 2), -1)
+  assert.strictEqual(mpz.cmp_ui(2, 2), 0)
 })
 
 QUnit.test('mul_2exp', function (assert) {
@@ -32,31 +32,31 @@ QUnit.test('swap', function (assert) {
   let a = 1
   let b = 2
   a = mpz.swap(b, b = a)
-  assert.equal(a, 2)
-  assert.equal(b, 1)
+  assert.strictEqual(a, 2)
+  assert.strictEqual(b, 1)
 })
 
 QUnit.test('two_compl', function (assert) {
-  assert.equal(mpz.two_compl(0).toString(2), '0')
-  assert.equal(mpz.two_compl(10).toString(2), '1010')
-  assert.equal(mpz.two_compl(-1).toString(2), '-1')
-  assert.equal(mpz.two_compl(-2).toString(2), '-10')
-  assert.equal(mpz.two_compl(-6).toString(2), '-1010')
-  assert.equal(mpz.two_compl(-9).toString(2), '-10111')
-  assert.equal(mpz.two_compl(-10).toString(2), '-10110')
+  assert.strictEqual(mpz.two_compl(0).toString(2), '0')
+  assert.strictEqual(mpz.two_compl(10).toString(2), '1010')
+  assert.strictEqual(mpz.two_compl(-1).toString(2), '-1')
+  assert.strictEqual(mpz.two_compl(-2).toString(2), '-10')
+  assert.strictEqual(mpz.two_compl(-6).toString(2), '-1010')
+  assert.strictEqual(mpz.two_compl(-9).toString(2), '-10111')
+  assert.strictEqual(mpz.two_compl(-10).toString(2), '-10110')
 })
 
 QUnit.test('tstbit', function (assert) {
-  assert.equal(mpz.tstbit(0, 10), 0)
+  assert.strictEqual(mpz.tstbit(0, 10), 0)
 
-  assert.equal(mpz.tstbit(4, 0), 0)
-  assert.equal(mpz.tstbit(4, 1), 0)
-  assert.equal(mpz.tstbit(4, 2), 1)
+  assert.strictEqual(mpz.tstbit(4, 0), 0)
+  assert.strictEqual(mpz.tstbit(4, 1), 0)
+  assert.strictEqual(mpz.tstbit(4, 2), 1)
 
-  assert.equal(mpz.tstbit(-1, 10), 1)
+  assert.strictEqual(mpz.tstbit(-1, 10), 1)
   // -9 => ....110111, 9 => 001001
-  assert.equal(mpz.tstbit(-9, 2), 1)
-  assert.equal(mpz.tstbit(-9, 3), 0)
+  assert.strictEqual(mpz.tstbit(-9, 2), 1)
+  assert.strictEqual(mpz.tstbit(-9, 3), 0)
 })
 
 QUnit.test('or', function (assert) {
@@ -150,7 +150,7 @@ QUnit.test('import', function (assert) {
 
   const buf = 'abcdef'
   imported = mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
-  assert.equal(imported.toString(), '107075202213222')
+  assert.strictEqual(imported.toString(), '107075202213222')
 })
 
 QUnit.test('export', function (assert) {
