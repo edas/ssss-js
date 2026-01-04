@@ -7,9 +7,7 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {
-    "bignumber.js": "^4.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "qunit": "^2.25.0",
     "standard": "^17.1.2",
