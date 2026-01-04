@@ -2,6 +2,9 @@
 
 const mpz = require('./mpz.js')
 
+// Use WebCrypto API (works in browsers and Node.js 15+)
+const webcrypto = globalThis.crypto || require('crypto').webcrypto
+
 const MAXDEGREE = 1024
 const MAXTOKENLEN = 128
 const ENCODE = 0
@@ -160,7 +163,7 @@ P.field_invert = function (x) {
 
 function cprngRead (deg) {
   const buf = new Uint8Array(deg / 8)
-  crypto.getRandomValues(buf)
+  webcrypto.getRandomValues(buf)
 
   return mpz.import(mpz.ORDER_MSB, mpz.ENDIAN_HOST, buf)
 }
