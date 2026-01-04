@@ -205,13 +205,13 @@
     To contribute to this project: <a href="https://github.com/gburca/ssss-js">
       https://github.com/gburca/ssss-js</a>
 
-    <p>Version:
-// #include "version.txt"
 
-    <script>
 
-// #include "bundle.js"
 
+
+    <script type="module">
+    import ssss from './ssss.js';
+    
     function logTo(elem) {
       ['log','debug','info','warn','error'].forEach(function (verb) {
         var orig = "orig_" + verb;
@@ -377,6 +377,13 @@
         rawEntropy.readOnly = true;
       }
     }
+
+    // Exposer les fonctions sur window pour qu'elles soient accessibles depuis les attributs onclick
+    window.generateKeys = generateKeys;
+    window.combineKeys = combineKeys;
+    window.extendKeys = extendKeys;
+    window.toggleShowRawEntropy = toggleShowRawEntropy;
+    window.toggleUseCustomRawEntropy = toggleUseCustomRawEntropy;
 
     </script>
   </body>
