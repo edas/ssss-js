@@ -15,6 +15,7 @@ This tool is a fork of <https://github.com/lbeder/ssss-js> and has been modified
 - Use native BigInt instead of bignumber.js
 - Use native WebCrypto instead of the node crypto module
 - Refactor SSSS to be Javascript class
+- Add shortcut functions (split, combine, resplit) for simpler usage
 
 The one-file HTML is not a goal for this version. It is meant to be use elsewhere.
 
@@ -58,24 +59,25 @@ the future.
 ## Usage
 
 ```
-import ssss from './ssss.js';
-const threshold = 3;
-const shares = 5; // only important for `split`
-const hexInput = false;
-const s = new ssss(threshold, numShares, hexInput);
+import { split, combine, resplit } from './ssss.js';
 
-// generate keys
-const prefix = "20251231"; // may not contain "-" 
-const secret = "my little secret"; // ascii for hexInput=false
-const [keys] = s.split(secret, prefix, options);
+// Split a secret into shares
+const secret = "my little secret";
+const keys = split(secret, {
+  threshold: 3,
+  numberOfKeys: 5,
+  prefix: "20251231"  // optional, may not contain "-"
+});
 
+// Recover the secret using threshold number of shares
+const recoveredSecret = combine(keys.slice(0, 3), { threshold: 3 });
 
-// recover the secret
-conse usedKeys = keys.slice(0, 3);
-const recoveredSecret = s.combine(usedKeys);
-
-// generate missing or new keys
-const newShare = s.extend(keys, threshold, token); 
+// Generate new shares from existing ones (resplit)
+const newKeys = resplit(keys.slice(0, 3), {
+  threshold: 3,
+  numberOfKeys: 7,
+  prefix: "newprefix"  // optional
+});
 ```
 
 Or try `pnpm run build` and open the file in dist/example.html

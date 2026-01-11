@@ -587,3 +587,39 @@ class SSSS {
 }
 
 export default SSSS
+
+
+export function split(buf, { threshold, inputIsHex, prefix, numberOfKeys }, options) {
+  const ssss = new SSSS(threshold, numberOfKeys, inputIsHex)
+  return ssss.split(buf, prefix, options)[0]
+}
+
+
+export function combine(shares, { threshold, inputIsHex }) {
+  const ssss = new SSSS(threshold, 0, inputIsHex)
+  return ssss.combine(shares)
+}
+
+
+export function resplit(shares, { threshold, inputIsHex, prefix, numberOfKeys }) {
+  if (numberOfKeys <= threshold) {
+    throw new Error('numberOfKeys must be greater than threshold')
+  }
+  const ssss = new SSSS(threshold, 0, inputIsHex)
+  const keys = []
+  for (let i = 0; i < numberOfKeys; i++) {
+    keys.push(ssss.regenerate(shares, threshold, i + 1, prefix, numberOfKeys + 1))
+  }
+  return keys
+}
+
+export function parseShare(share) {
+  const parts = share.split('-')
+  if (parts.length < 2) {
+    fatal('invalid share')
+  }
+  const value = parts[parts.length - 1]
+  const index = parseInt(parts[parts.length - 2])
+  const prefix = parts.length > 2 ? parts.slice(0, parts.length - 2).join('-') : undefined
+  return { prefix, index, value }
+}
