@@ -1,7 +1,5 @@
 'use strict'
 
-const MPZ = function () {}
-
 /**
  * Helper to convert value to BigInt
  */
@@ -30,18 +28,18 @@ function bigAbs (v) {
  * to a string. The right amount of allocation is normally two more than the
  * value returned by mpz_sizeinbase, one extra for a minus sign and one for the
  * null-terminator. */
-MPZ.prototype.sizeinbase = function (v, b) {
+export function sizeinbase (v, b) {
   return bigAbs(v).toString(b).length
 }
 
-MPZ.prototype.sizeinbits = function (v) {
+export function sizeinbits (v) {
   const n = toBigInt(v)
-  return n === 0n ? 0 : this.sizeinbase(n, 2)
+  return n === 0n ? 0 : sizeinbase(n, 2)
 }
 
 /** Compare op1 and op2. Return a positive value if op1 > op2, zero if op1 =
  * op2, or a negative value if op1 < op2. */
-MPZ.prototype.cmp_ui = function (v, i) {
+export function cmp_ui (v, i) {
   v = toBigInt(v)
   i = toBigInt(i)
   if (v > i) return 1
@@ -51,15 +49,17 @@ MPZ.prototype.cmp_ui = function (v, i) {
 
 /** Return a new BigInt whose value is 'v * 2^bitCount'. This operation
  * can also be defined as a left shift by bitCnt bits. */
-MPZ.prototype.lshift = MPZ.prototype.mul_2exp = function (v, bitCnt) {
+export function lshift (v, bitCnt) {
   v = toBigInt(v)
   return v << toBigInt(bitCnt)
 }
 
+export const mul_2exp = lshift
+
 /** Swap 2 values:
- * a = MPZ.swap(b, b=a);
+ * a = mpz.swap(b, b=a);
  */
-MPZ.prototype.swap = function (x) {
+export function swap (x) {
   return x
 }
 
@@ -76,7 +76,7 @@ MPZ.prototype.swap = function (x) {
  *  -3 => -101
  *  -6 => -1010
  *  */
-MPZ.prototype.two_compl = function (v) {
+export function two_compl (v) {
   v = toBigInt(v)
 
   if (v >= 0n) { return v }
@@ -92,9 +92,9 @@ MPZ.prototype.two_compl = function (v) {
 
 /** Test bit bit_index in op and return 0 or 1 accordingly. Assumes 2's
  * complement representation. */
-MPZ.prototype.tstbit = function (v, bitIdx) {
+export function tstbit (v, bitIdx) {
   if (bitIdx < 0) { throw new Error('Negative bit index') }
-  v = this.two_compl(v)
+  v = two_compl(v)
   const bits = bigAbs(v).toString(2)
 
   if (bitIdx >= bits.length) {
@@ -113,9 +113,9 @@ MPZ.prototype.tstbit = function (v, bitIdx) {
  * the numbers has fewer bits than the other, the shorter number is extended
  * with 0's (or 1's if it's a negative number) to match the length of the
  * longer one. */
-MPZ.prototype.bin_map = function (a, b, fn) {
-  a = this.two_compl(a)
-  b = this.two_compl(b)
+function bin_map (a, b, fn) {
+  a = two_compl(a)
+  b = two_compl(b)
   let sa = bigAbs(a).toString(2).replace('-', '').split('').reverse()
   let sb = bigAbs(b).toString(2).replace('-', '').split('').reverse()
 
@@ -139,29 +139,29 @@ MPZ.prototype.bin_map = function (a, b, fn) {
 
 /** Returns the bitwise or of the arguments. Assumes 2's complement
  * representation. */
-MPZ.prototype.or = function (a, b) {
-  return this.bin_map(a, b, function (va, vb) {
+export function or (a, b) {
+  return bin_map(a, b, function (va, vb) {
     return va === '1' || vb === '1' ? '1' : '0'
   })
 }
 
 /** Returns the bitwise exclusive-or of the arguments. Assumes 2's complement
  * representation. */
-MPZ.prototype.xor = function (a, b) {
-  return this.bin_map(a, b, function (va, vb) {
+export function xor (a, b) {
+  return bin_map(a, b, function (va, vb) {
     return va === vb ? '0' : '1'
   })
 }
 
 /** Sets the specified bit. */
-MPZ.prototype.setbit = function (v, bitIdx) {
+export function setbit (v, bitIdx) {
   if (bitIdx < 0) { throw new Error('Negative bit index') }
   v = toBigInt(v)
-  const res = this.or(v, 1n << toBigInt(bitIdx))
+  const res = or(v, 1n << toBigInt(bitIdx))
   return v < 0n ? -res : res
 }
 
-MPZ.prototype.set_str = function (s, base) {
+export function set_str (s, base) {
   if (base === 16) {
     return BigInt('0x' + s)
   } else if (base === 2) {
@@ -174,11 +174,11 @@ MPZ.prototype.set_str = function (s, base) {
   }
 }
 
-MPZ.prototype.ORDER_MSB = true // +1 in GMP
-MPZ.prototype.ORDER_LSB = false // -1 in GMP
-MPZ.prototype.ENDIAN_MSB = 1
-MPZ.prototype.ENDIAN_LSB = -1
-MPZ.prototype.ENDIAN_HOST = 0 // Not supported
+export const ORDER_MSB = true // +1 in GMP
+export const ORDER_LSB = false // -1 in GMP
+export const ENDIAN_MSB = 1
+export const ENDIAN_LSB = -1
+export const ENDIAN_HOST = 0 // Not supported
 
 /** Returns a BigInt created from buf.
  *
@@ -191,7 +191,7 @@ MPZ.prototype.ENDIAN_HOST = 0 // Not supported
  * There is no sign taken from the data, the output will simply be a positive
  * integer.  An application can handle any sign itself.
 */
-MPZ.prototype.import = function (orderMSB, endian, buf) {
+function mpzImport (orderMSB, endian, buf) {
   if (typeof buf === 'string') {
     const s = new Uint8Array(buf.length); s.forEach(function (v, i, s) { s[i] = buf.charCodeAt(i) }); buf = s
   }
@@ -199,7 +199,7 @@ MPZ.prototype.import = function (orderMSB, endian, buf) {
   if (buf.BYTES_PER_ELEMENT > 2) throw new Error('Wrong type')
 
   // Put least significant word in buf[0]
-  if (orderMSB === MPZ.prototype.ORDER_MSB) {
+  if (orderMSB === ORDER_MSB) {
     // Need to make a copy b/c reverse() modifies the input
     if (buf.BYTES_PER_ELEMENT === 1) {
       buf = new Uint8Array(buf)
@@ -216,7 +216,7 @@ MPZ.prototype.import = function (orderMSB, endian, buf) {
     })
   } else if (buf.BYTES_PER_ELEMENT === 2) {
     const view = new DataView(buf.buffer)
-    const littleEndian = (endian === MPZ.prototype.ENDIAN_LSB)
+    const littleEndian = (endian === ENDIAN_LSB)
 
     for (let i = 0; i < view.byteLength; i = i + 2) {
       const v = view.getUint16(i, littleEndian)
@@ -229,7 +229,7 @@ MPZ.prototype.import = function (orderMSB, endian, buf) {
 /** Returns a byte array with the contents of BigInt.
  * @param {Boolean} orderMSB
  */
-MPZ.prototype.export = function (orderMSB, size, endian, val) {
+function mpzExport (orderMSB, size, endian, val) {
   val = bigAbs(val)
 
   const a = []
@@ -248,7 +248,7 @@ MPZ.prototype.export = function (orderMSB, size, endian, val) {
       val = val / word
     }
 
-    if (endian === MPZ.prototype.ENDIAN_MSB) {
+    if (endian === ENDIAN_MSB) {
       a.forEach(function (val, idx, arr) {
         arr[idx] = (val >>> 8) | ((val & 0x00ff) << 8)
       })
@@ -266,4 +266,5 @@ MPZ.prototype.export = function (orderMSB, size, endian, val) {
   }
 }
 
-export default new MPZ()
+// Export import/export with their original names (reserved words need this syntax)
+export { mpzImport as import, mpzExport as export }
