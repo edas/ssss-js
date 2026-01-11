@@ -1,5 +1,5 @@
 'use strict'
-const BN = require('bignumber.js')
+import BN from 'bignumber.js'
 
 const MPZ = function () {}
 
@@ -238,4 +238,4 @@ MPZ.prototype.export = function (orderMSB, size, endian, val) {
   }
 }
 
-module.exports = new MPZ()
+export default new MPZ()

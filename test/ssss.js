@@ -1,5 +1,5 @@
 /* global QUnit */
-const SSSS = require('../ssss.js')
+import SSSS from '../ssss.js'
 
 QUnit.test('encode decode short', function (assert) {
   const threshold = 4

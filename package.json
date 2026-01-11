@@ -2,6 +2,7 @@
   "name": "ssss-js",
   "version": "1.1.0",
   "description": "Shamir's Secret Sharing Scheme",
+  "type": "module",
   "main": "ssss.js",
   "directories": {
     "test": "test"
@@ -10,14 +11,17 @@
     "bignumber.js": "^4.1.0"
   },
   "devDependencies": {
-    "browserify": "^14.5.0",
-    "preprocessor": "^1.4.0",
     "qunit": "^2.25.0",
-    "standard": "^17.1.2"
+    "standard": "^17.1.2",
+    "vite": "^7.3.0",
+    "vite-plugin-node-polyfills": "^0.24.0"
   },
   "scripts": {
     "test": "qunit",
-    "lint": "standard"
+    "lint": "standard",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
