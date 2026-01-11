@@ -1,6 +1,6 @@
 'use strict'
 
-import mpz from './mpz.js'
+import * as mpz from './mpz.js'
 
 const MAXDEGREE = 1024
 const MAXTOKENLEN = 128
