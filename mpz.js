@@ -1,7 +1,7 @@
 'use strict'
-var BN = require('bignumber.js')
+const BN = require('bignumber.js')
 
-var MPZ = function () {}
+const MPZ = function () {}
 
 /**
  * Return the size of op measured in number of digits in the given base. base
@@ -18,7 +18,7 @@ MPZ.prototype.sizeinbase = function (v, b) {
 }
 
 MPZ.prototype.sizeinbits = function (v) {
-  var n = new BN(v)
+  const n = new BN(v)
   return n.eq(0) ? 0 : this.sizeinbase(n, 2)
 }
 
@@ -32,7 +32,7 @@ MPZ.prototype.cmp_ui = function (v, i) {
  * can also be defined as a left shift by bitCnt bits. */
 MPZ.prototype.lshift = MPZ.prototype.mul_2exp = function (v, bitCnt) {
   v = new BN(v)
-  var two = new BN(2)
+  const two = new BN(2)
   return v.times(two.pow(bitCnt))
 }
 
@@ -62,8 +62,8 @@ MPZ.prototype.two_compl = function (v) {
   if (!v.isNegative()) { return v }
   if (v.equals(-1)) { return v } // Otherwise we return -11
 
-  var min1 = v.abs().minus(1)
-  var inv = min1.toString(2).split('').map(function (v) {
+  const min1 = v.abs().minus(1)
+  const inv = min1.toString(2).split('').map(function (v) {
     return v === '0' ? '1' : '0'
   })
   return new BN('-1' + inv.join(''), 2)
@@ -74,14 +74,14 @@ MPZ.prototype.two_compl = function (v) {
 MPZ.prototype.tstbit = function (v, bitIdx) {
   if (bitIdx < 0) { throw new Error('Negative bit index') }
   v = this.two_compl(v)
-  var bits = v.abs().toString(2)
+  const bits = v.abs().toString(2)
 
   if (bitIdx >= bits.length) {
-        // negative values are sign-extended
+    // negative values are sign-extended
     return v.isNegative() ? 1 : 0
   }
 
-    // Instead of reversing the string/bits, reverse the index
+  // Instead of reversing the string/bits, reverse the index
   bitIdx = (bits.length - 1) - bitIdx
   return bits.charAt(bitIdx) === '0' ? 0 : 1
 }
@@ -95,18 +95,18 @@ MPZ.prototype.tstbit = function (v, bitIdx) {
 MPZ.prototype.bin_map = function (a, b, fn) {
   a = this.two_compl(a)
   b = this.two_compl(b)
-  var sa = a.abs().toString(2).replace('-', '').split('').reverse()
-  var sb = b.abs().toString(2).replace('-', '').split('').reverse()
+  let sa = a.abs().toString(2).replace('-', '').split('').reverse()
+  let sb = b.abs().toString(2).replace('-', '').split('').reverse()
 
-    // Swap so sa is the longest
+  // Swap so sa is the longest
   if (sa.length < sb.length) {
-    var st = sa; var t = a
+    const st = sa; const t = a
     sa = sb; a = b
     sb = st; b = t
   }
 
-  var signExt = b.isNegative() ? '1' : '0'
-  var res = sa.map(function (v, idx) {
+  const signExt = b.isNegative() ? '1' : '0'
+  const res = sa.map(function (v, idx) {
     if (idx < sb.length) {
       return fn(v, sb[idx])
     } else {
@@ -136,17 +136,16 @@ MPZ.prototype.xor = function (a, b) {
 MPZ.prototype.setbit = function (v, bitIdx) {
   if (bitIdx < 0) { throw new Error('Negative bit index') }
   v = new BN(v)
-  var res = this.or(v, (new BN(2)).pow(bitIdx))
+  const res = this.or(v, (new BN(2)).pow(bitIdx))
   return v.isNegative() ? res.negated() : res
 }
 
 MPZ.prototype.set_str = function (s, base) {
-  var big = new BN(s, base)
+  const big = new BN(s, base)
   return big
 }
 
-
-MPZ.prototype.ORDER_MSB = true  // +1 in GMP
+MPZ.prototype.ORDER_MSB = true // +1 in GMP
 MPZ.prototype.ORDER_LSB = false // -1 in GMP
 MPZ.prototype.ENDIAN_MSB = 1
 MPZ.prototype.ENDIAN_LSB = -1
@@ -165,7 +164,7 @@ MPZ.prototype.ENDIAN_HOST = 0 // Not supported
 */
 MPZ.prototype.import = function (orderMSB, endian, buf) {
   if (typeof buf === 'string') {
-    var s = new Uint8Array(buf.length); s.forEach(function (v, i, s) { s[i] = buf.charCodeAt(i) }); buf = s
+    const s = new Uint8Array(buf.length); s.forEach(function (v, i, s) { s[i] = buf.charCodeAt(i) }); buf = s
   }
 
   if (buf.BYTES_PER_ELEMENT > 2) throw new Error('Wrong type')
@@ -180,19 +179,19 @@ MPZ.prototype.import = function (orderMSB, endian, buf) {
     }
     buf.reverse()
   }
-  var power = new BN(8)
+  const power = new BN(8)
 
-  var res = new BN(0)
+  let res = new BN(0)
   if (buf.BYTES_PER_ELEMENT === 1) {
     buf.forEach(function (elem, idx) {
       res = res.plus(this.mul_2exp(elem, power.times(idx)))
     }, this)
   } else if (buf.BYTES_PER_ELEMENT === 2) {
-    var view = new DataView(buf.buffer)
-    var littleEndian = (endian === MPZ.prototype.ENDIAN_LSB)
+    const view = new DataView(buf.buffer)
+    const littleEndian = (endian === MPZ.prototype.ENDIAN_LSB)
 
-    for (var i = 0; i < view.byteLength; i = i + 2) {
-      var v = view.getUint16(i, littleEndian)
+    for (let i = 0; i < view.byteLength; i = i + 2) {
+      const v = view.getUint16(i, littleEndian)
       res = res.plus(this.mul_2exp(v, power.times(i)))
     }
   }
@@ -205,18 +204,18 @@ MPZ.prototype.import = function (orderMSB, endian, buf) {
 MPZ.prototype.export = function (orderMSB, size, endian, val) {
   val = val.abs()
 
-  var a = []
+  const a = []
 
   if (size === 1) {
-    var div = Math.pow(2, 8)
+    const div = Math.pow(2, 8)
     while (!val.isZero()) {
       a.push(val.mod(div).toNumber())
       val = val.dividedToIntegerBy(div)
     }
   } else {
-    var word = Math.pow(2, 16)
+    const word = Math.pow(2, 16)
     while (!val.isZero()) {
-      var w = val.mod(word)
+      const w = val.mod(word)
       a.push(w.toNumber())
       val = val.dividedToIntegerBy(word)
     }
