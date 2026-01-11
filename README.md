@@ -14,6 +14,7 @@ This tool is a fork of <https://github.com/lbeder/ssss-js> and has been modified
 - Use Vite for building the HTML example
 - Use native BigInt instead of bignumber.js
 - Use native WebCrypto instead of the node crypto module
+- Refactor SSSS to be Javascript class
 
 The one-file HTML is not a goal for this version. It is meant to be use elsewhere.
 

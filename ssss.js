@@ -218,370 +218,366 @@ function fieldInit (deg) {
   return poly
 }
 
-// Constructor
-function SSSS (threshold, numberOfKeys, inputIsHex) {
-  if (!(this instanceof SSSS)) {
-    return new SSSS(threshold, numberOfKeys, inputIsHex)
+// Class definition
+class SSSS {
+  constructor (threshold, numberOfKeys, inputIsHex) {
+    if (numberOfKeys > 0 && threshold > numberOfKeys) {
+      threshold = numberOfKeys
+    }
+    this.opt_threshold = threshold
+    this.opt_number = numberOfKeys
+    if (typeof (inputIsHex) === 'boolean') {
+      this.opt_hex = inputIsHex
+    } else {
+      this.opt_hex = false
+    }
+    this.opt_diffusion = true
   }
 
-  if (numberOfKeys > 0 && threshold > numberOfKeys) {
-    threshold = numberOfKeys
+  /* evaluate polynomials efficiently */
+
+  /**
+   * @param {Number} n
+   * @param {BigInt} x
+   * @param {BigInt array} coeff
+   * @returns y
+   */
+  horner (n, x, coeff) {
+    let y = x
+    for (let i = n - 1; i; i--) {
+      y = fieldAdd(y, coeff[i])
+      y = this.field_mult(y, x)
+    }
+    y = fieldAdd(y, coeff[0])
+    return y
   }
-  this.opt_threshold = threshold
-  this.opt_number = numberOfKeys
-  if (typeof (inputIsHex) === 'boolean') {
-    this.opt_hex = inputIsHex
-  } else {
-    this.opt_hex = false
-  }
-  this.opt_diffusion = true
-}
 
-/* evaluate polynomials efficiently */
+  /**
+   * @param {Number} n
+   * @param {BigInt[][]} A 2D array
+   * @param {BigInt[]} b 1D array
+   */
+  restore_secret (n, AA, b, coeff) {
+    let i, j, k, found
+    let h = 0n
+    const t = this
 
-/**
- * @param {Number} n
- * @param {BigInt} x
- * @param {BigInt array} coeff
- * @returns y
- */
-SSSS.prototype.horner = function (n, x, coeff) {
-  let y = x
-  for (let i = n - 1; i; i--) {
-    y = fieldAdd(y, coeff[i])
-    y = this.field_mult(y, x)
-  }
-  y = fieldAdd(y, coeff[0])
-  return y
-}
-
-/**
- * @param {Number} n
- * @param {BigInt[][]} A 2D array
- * @param {BigInt[]} b 1D array
- */
-SSSS.prototype.restore_secret = function (n, AA, b, coeff) {
-  let i, j, k, found
-  let h = 0n
-  const t = this
-
-  for (i = 0; i < n; i++) {
-    if (!mpz.cmp_ui(AA[i][i], 0)) {
-      found = false
+    for (i = 0; i < n; i++) {
+      if (!mpz.cmp_ui(AA[i][i], 0)) {
+        found = false
+        for (j = i + 1; j < n; j++) {
+          if (mpz.cmp_ui(AA[i][j], 0)) {
+            found = true
+            break
+          }
+        }
+        if (!found) {
+          return -1
+        }
+        for (k = i; k < n; k++) {
+          AA[k][i] = mpz.swap(AA[k][j], AA[k][j] = AA[k][i])
+        }
+        b[i] = mpz.swap(b[j], b[j] = b[i])
+      }
       for (j = i + 1; j < n; j++) {
         if (mpz.cmp_ui(AA[i][j], 0)) {
-          found = true
-          break
+          for (k = i + 1; k < n; k++) {
+            h = t.field_mult(AA[k][i], AA[i][j])
+            AA[k][j] = t.field_mult(AA[k][j], AA[i][i])
+            AA[k][j] = fieldAdd(AA[k][j], h)
+          }
+          h = t.field_mult(b[i], AA[i][j])
+          b[j] = t.field_mult(b[j], AA[i][i])
+          b[j] = fieldAdd(b[j], h)
         }
       }
-      if (!found) {
-        return -1
-      }
-      for (k = i; k < n; k++) {
-        AA[k][i] = mpz.swap(AA[k][j], AA[k][j] = AA[k][i])
-      }
-      b[i] = mpz.swap(b[j], b[j] = b[i])
     }
-    for (j = i + 1; j < n; j++) {
-      if (mpz.cmp_ui(AA[i][j], 0)) {
-        for (k = i + 1; k < n; k++) {
-          h = t.field_mult(AA[k][i], AA[i][j])
-          AA[k][j] = t.field_mult(AA[k][j], AA[i][i])
-          AA[k][j] = fieldAdd(AA[k][j], h)
-        }
-        h = t.field_mult(b[i], AA[i][j])
-        b[j] = t.field_mult(b[j], AA[i][i])
-        b[j] = fieldAdd(b[j], h)
+    h = t.field_invert(AA[n - 1][n - 1])
+    b[n - 1] = t.field_mult(b[n - 1], h)
+
+    // Transform AA to identity matrix and calculate other coefficients to recover other shares
+    coeff.push(b[n - 1])
+
+    for (i = n - 2; i >= 0; i--) {
+      for (j = n - 1; j > i; j--) {
+        h = t.field_mult(b[j], AA[j][i])
+        b[i] = fieldAdd(b[i], h)
       }
+      h = t.field_invert(AA[i][i])
+      b[i] = t.field_mult(b[i], h)
+
+      coeff.push(b[i])
     }
+
+    return 0
   }
-  h = t.field_invert(AA[n - 1][n - 1])
-  b[n - 1] = t.field_mult(b[n - 1], h)
 
-  // Transform AA to identity matrix and calculate other coefficients to recover other shares
-  coeff.push(b[n - 1])
+  field_deinit () {
+    this.poly = 0n
+  }
 
-  for (i = n - 2; i >= 0; i--) {
-    for (j = n - 1; j > i; j--) {
-      h = t.field_mult(b[j], AA[j][i])
-      b[i] = fieldAdd(b[i], h)
+  /**
+   * @param {String} buf The secret to encode
+   * @param {String} token An optional text token used to name shares in order to
+   * avoid confusion in case one utilizes secret sharing to protect several
+   * independent secrets. The generated shares are prefixed by these tokens.
+   * @param {String} options Additional options
+   */
+  split (buf, token, options) {
+    let x
+    let y
+    const coeff = []
+    let i
+    let fmtLen // Length of the key index number
+
+    options = options || {}
+    const { exportEntropy, useCustomEntropy, entropy } = options
+
+    let exportedEntropy = ''
+
+    if (token && token.length > MAXTOKENLEN) {
+      throw new Error('Token too long')
     }
-    h = t.field_invert(AA[i][i])
-    b[i] = t.field_mult(b[i], h)
 
-    coeff.push(b[i])
-  }
+    for (fmtLen = 1, i = this.opt_number; i >= 10; i /= 10, fmtLen++);
 
-  return 0
-}
-
-SSSS.prototype.field_deinit = function () {
-  this.poly = 0n
-}
-
-/**
- * @param {String} buf The secret to encode
- * @param {String} token An optional text token used to name shares in order to
- * avoid confusion in case one utilizes secret sharing to protect several
- * independent secrets. The generated shares are prefixed by these tokens.
- * @param {String} options Additional options
- */
-
-SSSS.prototype.split = function (buf, token, options) {
-  let x
-  let y
-  const coeff = []
-  let i
-  let fmtLen // Length of the key index number
-
-  options = options || {}
-  const { exportEntropy, useCustomEntropy, entropy } = options
-
-  let exportedEntropy = ''
-
-      if (token && token.length > MAXTOKENLEN) {
-        throw new Error('Token too long')
-      }
-
-  for (fmtLen = 1, i = this.opt_number; i >= 10; i /= 10, fmtLen++);
-
-  let optSecurity
-  if (this.opt_hex) {
-    optSecurity = 4 * ((buf.length + 1) & ~1)
-  } else {
-    optSecurity = 8 * buf.length
-  }
-  if (!fieldSizeValid(optSecurity)) {
-    throw new Error('Security level invalid (secret too long?)')
-  }
-
-  this.degree = optSecurity
-  this.poly = fieldInit(this.degree)
-
-  if (useCustomEntropy) {
-    const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1)
-    if (!entropy || entropy.length !== expectedLength) {
-      throw new Error(`Raw entropy must be a hexadecimal string of length: ${expectedLength}`)
-    }
-  }
-
-  coeff[0] = fieldImport(buf, this.opt_hex, this.degree)
-
-  if (this.opt_diffusion) {
-    if (this.degree >= 64) {
-      coeff[0] = encodeMpz(coeff[0], ENCODE, this.degree)
+    let optSecurity
+    if (this.opt_hex) {
+      optSecurity = 4 * ((buf.length + 1) & ~1)
     } else {
-      warning('Security level too small for the diffusion layer. Secret too short.')
+      optSecurity = 8 * buf.length
     }
-  }
+    if (!fieldSizeValid(optSecurity)) {
+      throw new Error('Security level invalid (secret too long?)')
+    }
 
-  const cLength = this.degree / 8 * 2
-  for (i = 1; i < this.opt_threshold; i++) {
-    let c
+    this.degree = optSecurity
+    this.poly = fieldInit(this.degree)
 
     if (useCustomEntropy) {
-      const startIndex = cLength * (i - 1)
-      c = BigInt('0x' + entropy.slice(startIndex, startIndex + cLength))
-    } else {
-      c = cprngRead(this.degree)
-    }
-    coeff.push(c)
-
-    if (exportEntropy) {
-      exportedEntropy += c.toString(16).padStart(cLength, '0')
-    }
-  }
-
-  const keys = []
-  for (i = 0; i < this.opt_number; i++) {
-    x = BigInt(i + 1)
-    y = this.horner(this.opt_threshold, x, coeff)
-    let key = ''
-    if (token) {
-      key = token + '-'
-    }
-    key += pad(i + 1, fmtLen, '0')
-    key += '-'
-    key += fieldPrint(y, 1, this.degree)
-    keys.push(key)
-  }
-
-  this.field_deinit()
-  return [keys, exportedEntropy]
-}
-
-/* Calculate the secret */
-
-SSSS.prototype.combine = function (shares) {
-  const [secret] = this._combine(shares)
-
-  this.field_deinit()
-
-  return secret
-}
-
-SSSS.prototype._combine = function (shares) {
-  let a, b
-  let i, j
-  let s = 0
-
-  let x
-
-  const y = new Array(this.opt_threshold)
-
-  const A = new Array(this.opt_threshold)
-  A.fill(0) // Else forEach is not called for uninitialized elements
-  A.forEach(function (v, i, a) {
-    a[i] = new Array(this.opt_threshold)
-  }, this)
-
-  for (i = 0; i < this.opt_threshold; i++) {
-    const parts = shares[i].split('-')
-    if (parts.length < 2) {
-      fatal('Invalid syntax.')
-    }
-    a = parts[parts.length - 2]
-    b = parts[parts.length - 1]
-
-    if (s === 0) {
-      s = 4 * b.length
-      if (!fieldSizeValid(s)) {
-        fatal('Share has illegal length.')
+      const expectedLength = this.degree / 8 * 2 * (this.opt_threshold - 1)
+      if (!entropy || entropy.length !== expectedLength) {
+        throw new Error(`Raw entropy must be a hexadecimal string of length: ${expectedLength}`)
       }
-      this.degree = s
-      this.poly = fieldInit(this.degree)
-    } else if (s !== 4 * b.length) {
-      fatal('Shares have different security levels.')
     }
 
-    j = parseInt(a)
-    if (isNaN(j)) fatal('invalid share')
-    x = BigInt(j)
-    A[this.opt_threshold - 1][i] = 1n
+    coeff[0] = fieldImport(buf, this.opt_hex, this.degree)
 
-    for (j = this.opt_threshold - 2; j >= 0; j--) {
-      A[j][i] = this.field_mult(A[j + 1][i], x)
+    if (this.opt_diffusion) {
+      if (this.degree >= 64) {
+        coeff[0] = encodeMpz(coeff[0], ENCODE, this.degree)
+      } else {
+        warning('Security level too small for the diffusion layer. Secret too short.')
+      }
     }
-    y[i] = fieldImport(b, 1, this.degree)
-    x = this.field_mult(x, A[0][i])
-    y[i] = fieldAdd(y[i], x)
-  }
 
-  const coeff = []
-  if (this.restore_secret(this.opt_threshold, A, y, coeff)) {
-    fatal('Shares inconsistent. Perhaps a single share was used twice.')
-  }
+    const cLength = this.degree / 8 * 2
+    for (i = 1; i < this.opt_threshold; i++) {
+      let c
 
-  if (this.opt_diffusion) {
-    if (this.degree >= 64) {
-      y[this.opt_threshold - 1] = encodeMpz(y[this.opt_threshold - 1], DECODE, this.degree)
-    } else {
-      warning('Security level too small for the diffusion layer. Secret too short.')
+      if (useCustomEntropy) {
+        const startIndex = cLength * (i - 1)
+        c = BigInt('0x' + entropy.slice(startIndex, startIndex + cLength))
+      } else {
+        c = cprngRead(this.degree)
+      }
+      coeff.push(c)
+
+      if (exportEntropy) {
+        exportedEntropy += c.toString(16).padStart(cLength, '0')
+      }
     }
+
+    const keys = []
+    for (i = 0; i < this.opt_number; i++) {
+      x = BigInt(i + 1)
+      y = this.horner(this.opt_threshold, x, coeff)
+      let key = ''
+      if (token) {
+        key = token + '-'
+      }
+      key += pad(i + 1, fmtLen, '0')
+      key += '-'
+      key += fieldPrint(y, 1, this.degree)
+      keys.push(key)
+    }
+
+    this.field_deinit()
+    return [keys, exportedEntropy]
   }
 
-  return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff]
-}
+  /* Calculate the secret */
+  combine (shares) {
+    const [secret] = this._combine(shares)
 
-SSSS.prototype.extend = function (shares, optThreshold, token) {
-  if (token.length > MAXTOKENLEN) {
-    fatal('Token too long')
+    this.field_deinit()
+
+    return secret
   }
 
-  const [, coeff] = this._combine(shares)
+  _combine (shares) {
+    let a, b
+    let i, j
+    let s = 0
 
-  // Find the first available index
-  let nextIndex = shares.length + 1
+    let x
 
-  const indexes = []
-  for (const share of shares) {
-    let currentIndex
-    const parts = share.split('-')
-    if (token) {
-      if (token !== parts[0]) {
+    const y = new Array(this.opt_threshold)
+
+    const A = new Array(this.opt_threshold)
+    A.fill(0) // Else forEach is not called for uninitialized elements
+    A.forEach(function (v, i, a) {
+      a[i] = new Array(this.opt_threshold)
+    }, this)
+
+    for (i = 0; i < this.opt_threshold; i++) {
+      const parts = shares[i].split('-')
+      if (parts.length < 2) {
+        fatal('Invalid syntax.')
+      }
+      a = parts[parts.length - 2]
+      b = parts[parts.length - 1]
+
+      if (s === 0) {
+        s = 4 * b.length
+        if (!fieldSizeValid(s)) {
+          fatal('Share has illegal length.')
+        }
+        this.degree = s
+        this.poly = fieldInit(this.degree)
+      } else if (s !== 4 * b.length) {
+        fatal('Shares have different security levels.')
+      }
+
+      j = parseInt(a)
+      if (isNaN(j)) fatal('invalid share')
+      x = BigInt(j)
+      A[this.opt_threshold - 1][i] = 1n
+
+      for (j = this.opt_threshold - 2; j >= 0; j--) {
+        A[j][i] = this.field_mult(A[j + 1][i], x)
+      }
+      y[i] = fieldImport(b, 1, this.degree)
+      x = this.field_mult(x, A[0][i])
+      y[i] = fieldAdd(y[i], x)
+    }
+
+    const coeff = []
+    if (this.restore_secret(this.opt_threshold, A, y, coeff)) {
+      fatal('Shares inconsistent. Perhaps a single share was used twice.')
+    }
+
+    if (this.opt_diffusion) {
+      if (this.degree >= 64) {
+        y[this.opt_threshold - 1] = encodeMpz(y[this.opt_threshold - 1], DECODE, this.degree)
+      } else {
+        warning('Security level too small for the diffusion layer. Secret too short.')
+      }
+    }
+
+    return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff]
+  }
+
+  extend (shares, optThreshold, token) {
+    if (token.length > MAXTOKENLEN) {
+      fatal('Token too long')
+    }
+
+    const [, coeff] = this._combine(shares)
+
+    // Find the first available index
+    let nextIndex = shares.length + 1
+
+    const indexes = []
+    for (const share of shares) {
+      let currentIndex
+      const parts = share.split('-')
+      if (token) {
+        if (token !== parts[0]) {
+          fatal('invalid share')
+        }
+
+        currentIndex = parseInt(parts[1])
+      } else {
+        currentIndex = parseInt(parts[0])
+      }
+
+      if (isNaN(currentIndex)) {
         fatal('invalid share')
       }
 
-      currentIndex = parseInt(parts[1])
+      indexes.push(currentIndex)
+    }
+
+    const sortedIndexes = indexes.sort((a, b) => a - b)
+    for (const [i, currentIndex] of sortedIndexes.entries()) {
+      if (currentIndex !== i + 1) {
+        nextIndex = i + 1
+
+        break
+      }
+    }
+
+    const x = BigInt(nextIndex)
+    const y = this.horner(optThreshold, x, coeff)
+
+    let share = ''
+    if (token) {
+      share = token + '-'
+    }
+
+    let fmtLen = 1
+    let i = Math.max(shares.length + 1, nextIndex)
+    for (; i >= 10; i /= 10, fmtLen++);
+
+    share += pad(nextIndex, fmtLen, '0')
+    share += '-'
+    share += fieldPrint(y, 1, this.degree)
+
+    this.field_deinit()
+
+    return share
+  }
+
+  field_mult (x, y) {
+    let z
+    let b = x
+    if (mpz.tstbit(y, 0)) {
+      z = b
     } else {
-      currentIndex = parseInt(parts[0])
+      z = 0n
     }
 
-    if (isNaN(currentIndex)) {
-      fatal('invalid share')
+    for (let i = 1; i < this.degree; i++) {
+      b = mpz.lshift(b, 1)
+      if (mpz.tstbit(b, this.degree)) { b = mpz.xor(b, this.poly) }
+      if (mpz.tstbit(y, i)) { z = mpz.xor(z, b) }
     }
 
-    indexes.push(currentIndex)
+    return z
   }
 
-  const sortedIndexes = indexes.sort((a, b) => a - b)
-  for (const [i, currentIndex] of sortedIndexes.entries()) {
-    if (currentIndex !== i + 1) {
-      nextIndex = i + 1
-
-      break
+  field_invert (x) {
+    assert(mpz.cmp_ui(x, 0))
+    let h
+    let u = x
+    let v = this.poly
+    let g = 0n
+    let z = 1n
+    while (mpz.cmp_ui(u, 1)) {
+      let i = mpz.sizeinbits(u) - mpz.sizeinbits(v)
+      if (i < 0) {
+        v = mpz.swap(u, u = v)
+        g = mpz.swap(z, z = g)
+        i = -i
+      }
+      h = mpz.lshift(v, i)
+      u = mpz.xor(u, h)
+      h = mpz.lshift(g, i)
+      z = mpz.xor(z, h)
     }
+    return z
   }
-
-  const x = BigInt(nextIndex)
-  const y = this.horner(optThreshold, x, coeff)
-
-  let share = ''
-  if (token) {
-    share = token + '-'
-  }
-
-  let fmtLen = 1
-  let i = Math.max(shares.length + 1, nextIndex)
-  for (; i >= 10; i /= 10, fmtLen++);
-
-  share += pad(nextIndex, fmtLen, '0')
-  share += '-'
-  share += fieldPrint(y, 1, this.degree)
-
-  this.field_deinit()
-
-  return share
-}
-
-SSSS.prototype.field_mult = function (x, y) {
-  let z
-  let b = x
-  if (mpz.tstbit(y, 0)) {
-    z = b
-  } else {
-    z = 0n
-  }
-
-  for (let i = 1; i < this.degree; i++) {
-    b = mpz.lshift(b, 1)
-    if (mpz.tstbit(b, this.degree)) { b = mpz.xor(b, this.poly) }
-    if (mpz.tstbit(y, i)) { z = mpz.xor(z, b) }
-  }
-
-  return z
-}
-
-SSSS.prototype.field_invert = function (x) {
-  assert(mpz.cmp_ui(x, 0))
-  let h
-  let u = x
-  let v = this.poly
-  let g = 0n
-  let z = 1n
-  while (mpz.cmp_ui(u, 1)) {
-    let i = mpz.sizeinbits(u) - mpz.sizeinbits(v)
-    if (i < 0) {
-      v = mpz.swap(u, u = v)
-      g = mpz.swap(z, z = g)
-      i = -i
-    }
-    h = mpz.lshift(v, i)
-    u = mpz.xor(u, h)
-    h = mpz.lshift(g, i)
-    z = mpz.xor(z, h)
-  }
-  return z
 }
 
 export default SSSS
