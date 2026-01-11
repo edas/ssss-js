@@ -4,6 +4,7 @@
   "description": "Shamir's Secret Sharing Scheme",
   "type": "module",
   "main": "ssss.js",
+  "types": "ssss.d.ts",
   "directories": {
     "test": "test"
   },
