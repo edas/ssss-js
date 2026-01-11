@@ -478,13 +478,37 @@ class SSSS {
     return [fieldPrint(y[this.opt_threshold - 1], this.opt_hex, this.degree), coeff]
   }
 
-  extend (shares, optThreshold, token) {
-    if (token.length > MAXTOKENLEN) {
+
+  regenerate(shares, optThreshold, index, token, maxIndex) {
+    if (token && token.length > MAXTOKENLEN) {
       fatal('Token too long')
     }
 
     const [, coeff] = this._combine(shares)
 
+    const x = BigInt(index)
+    const y = this.horner(optThreshold, x, coeff)
+
+    let share = ''
+    if (token) {
+      share = token + '-'
+    }
+
+    let fmtLen = 1
+    let i = Math.max(shares.length + 1, index, maxIndex ?? 0)
+    for (; i >= 10; i /= 10, fmtLen++);
+
+    share += pad(index, fmtLen, '0')
+    share += '-'
+    share += fieldPrint(y, 1, this.degree)
+
+    this.field_deinit()
+
+    return share
+
+  }
+  
+  extend (shares, optThreshold, token) {
     // Find the first available index
     let nextIndex = shares.length + 1
 
@@ -518,25 +542,7 @@ class SSSS {
       }
     }
 
-    const x = BigInt(nextIndex)
-    const y = this.horner(optThreshold, x, coeff)
-
-    let share = ''
-    if (token) {
-      share = token + '-'
-    }
-
-    let fmtLen = 1
-    let i = Math.max(shares.length + 1, nextIndex)
-    for (; i >= 10; i /= 10, fmtLen++);
-
-    share += pad(nextIndex, fmtLen, '0')
-    share += '-'
-    share += fieldPrint(y, 1, this.degree)
-
-    this.field_deinit()
-
-    return share
+    return this.regenerate(shares, optThreshold, nextIndex, token)
   }
 
   field_mult (x, y) {
