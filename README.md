@@ -59,18 +59,19 @@ the future.
 ## Usage
 
 ```javascript
-import { split, combine, resplit } from './ssss.js';
+import { splitString, combineString, resplit } from './ssss.js';
+// could be splitBuffer, splitHexString, combineBuffer, combineHexString
 
 // Split a secret into shares
 const secret = "my little secret";
-const keys = split(secret, {
+const keys = splitString(secret, {
   threshold: 3,
   numberOfKeys: 5,
   prefix: "20251231"  // optional, may not contain "-"
 });
 
 // Recover the secret using threshold number of shares
-const recoveredSecret = combine(keys.slice(0, 3), { threshold: 3 });
+const recoveredSecret = combineString(keys.slice(0, 3), { threshold: 3 });
 
 // Generate new shares from existing ones (resplit)
 const newKeys = resplit(keys.slice(0, 3), {

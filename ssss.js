@@ -588,24 +588,44 @@ class SSSS {
 
 export default SSSS
 
+export function splitBuffer(buf, { threshold, prefix, numberOfKeys }, options) {
+  const ssss = new SSSS(threshold, numberOfKeys, true)
+  return ssss.split(buf.toHex(), prefix, options)[0]
+}
 
-export function split(buf, { threshold, inputIsHex, prefix, numberOfKeys }, options) {
-  const ssss = new SSSS(threshold, numberOfKeys, inputIsHex)
-  return ssss.split(buf, prefix, options)[0]
+export function splitString(str, { threshold, prefix, numberOfKeys }, options) {
+  const ssss = new SSSS(threshold, numberOfKeys, false)
+  return ssss.split(str, prefix, options)[0]
+}
+
+export function splitHexString(hex, { threshold, prefix, numberOfKeys }, options) {
+  const ssss = new SSSS(threshold, numberOfKeys, true)
+  return ssss.split(hex, prefix, options)[0]
 }
 
 
-export function combine(shares, { threshold, inputIsHex }) {
-  const ssss = new SSSS(threshold, 0, inputIsHex)
+export function combineToText(shares, { threshold }) {
+  const ssss = new SSSS(threshold, 0, false)
   return ssss.combine(shares)
 }
 
+export function combineToHexString(shares, { threshold }) {
+  const ssss = new SSSS(threshold, 0, true)
+  return ssss.combine(shares)
+}
 
-export function resplit(shares, { threshold, inputIsHex, prefix, numberOfKeys }) {
+export function combineToBuffer(shares, { threshold }) {
+  const ssss = new SSSS(threshold, 0, true)
+  const secret = ssss.combine(shares)
+  return Uint8Array.fromHex(secret)
+}
+
+
+export function resplit(shares, { threshold, prefix, numberOfKeys }) {
   if (numberOfKeys <= threshold) {
     throw new Error('numberOfKeys must be greater than threshold')
   }
-  const ssss = new SSSS(threshold, 0, inputIsHex)
+  const ssss = new SSSS(threshold, 0, true)
   const keys = []
   for (let i = 0; i < numberOfKeys; i++) {
     keys.push(ssss.regenerate(shares, threshold, i + 1, prefix, numberOfKeys + 1))
