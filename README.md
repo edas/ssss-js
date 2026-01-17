@@ -58,7 +58,7 @@ the future.
 
 ## Usage
 
-```
+```javascript
 import { split, combine, resplit } from './ssss.js';
 
 // Split a secret into shares
